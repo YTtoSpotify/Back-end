@@ -2,10 +2,10 @@
 	"name": "backend",
 	"version": "1.0.0",
 	"description": "Backend for YT to Spotify project",
-	"main": "server.js",
+	"main": "BE/src/server.js",
 	"scripts": {
 		"test": "test",
-		"server": "nodemon src/server.js"
+		"server": "nodemon /BE/src/server.js"
 	},
 	"repository": {
 		"type": "git",
