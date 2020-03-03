@@ -28,7 +28,8 @@ router.get(
 	passport.authenticate("spotify", {
 		scope,
 		failureRedirect: "http://localhost:3000",
-		showDialog: true
+		showDialog: true,
+		display: "popup"
 	}),
 	(req, res) => {}
 );
