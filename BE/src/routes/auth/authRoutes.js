@@ -27,21 +27,16 @@ router.get(
 	"/",
 	passport.authenticate("spotify", {
 		scope,
-		failureRedirect: "http://localhost:3000",
 		showDialog: true,
 		display: "popup"
 	}),
 	(req, res) => {}
 );
 
-router.get(
-	"/callback",
-	passport.authenticate("spotify", { failureRedirect: "/authFail" }),
-	(req, res) => {
-		const tokenString = qs.stringify(req.user);
-		console.log(req.user);
+router.get("/callback", passport.authenticate("spotify", {}), (req, res) => {
+	const tokenString = qs.stringify(req.user);
+	console.log(req.user);
 
-		res.redirect("checkAuth");
-	}
-);
+	res.redirect(`http://localhost:4200/login?${tokenString}`);
+});
 module.exports = router;
