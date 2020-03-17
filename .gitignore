@@ -1,2 +1,4 @@
 /BE/node_modules
 /BE/.env
+/node_modules
+/.env
