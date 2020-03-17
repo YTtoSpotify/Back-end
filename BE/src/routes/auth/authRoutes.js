@@ -34,8 +34,7 @@ router.get(
 );
 
 router.get("/callback", passport.authenticate("spotify", {}), (req, res) => {
-	const tokenString = qs.stringify(req.user);
-	console.log(req.user);
+	const tokenString = qs.stringify(req.user.tokens);
 
 	res.redirect(`http://localhost:4200/login?${tokenString}`);
 });
