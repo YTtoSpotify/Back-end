@@ -6,10 +6,12 @@ const clientID = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const callbackURL = process.env.REDIRECT_URI;
 
+// this converts whatever is passed into 'done' into a bytestream(raw bit data), to be rebuilt by the deserialization function
 passport.serializeUser((user, done) => {
 	done(null, user);
 });
 
+// this assigns req.user as whatever came through from the callback in serializeUser
 passport.deserializeUser((user, done) => {
 	done(null, user);
 });
