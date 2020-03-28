@@ -2,7 +2,7 @@
 	"name": "backend",
 	"version": "1.0.0",
 	"description": "Backend for YT to Spotify project",
-	"main": "server.js",
+	"main": "BE/src/server.js",
 	"scripts": {
 		"test": "test",
 		"server": "nodemon BE/src/server.js"

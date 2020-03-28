@@ -13,13 +13,16 @@ const scope = [
 const isAuthenticated = (req, res, next) => {
 	if (req.isAuthenticated) return next();
 	else {
-		return res.status(401).json({ error: "Unauthenticated" });
+		return res
+			.status(403)
+			.json({ isLoggedIn: false })
+			.redirect("http://localhost:4200");
 	}
 };
 
 router.get("/checkAuth", isAuthenticated, (req, res) => {
 	res.status(200).json({
-		status: "Login Successful"
+		isLoggedIn: true
 	});
 });
 
@@ -27,21 +30,26 @@ router.get(
 	"/",
 	passport.authenticate("spotify", {
 		scope,
-		failureRedirect: "http://localhost:3000",
 		showDialog: true,
 		display: "popup"
 	}),
-	(req, res) => {}
+	(req, res) => {
+		// this is never called because the middleware hands control over to spotify and spotify redirects to /callback
+	}
 );
 
 router.get(
 	"/callback",
-	passport.authenticate("spotify", { failureRedirect: "/authFail" }),
+	passport.authenticate("spotify", { failureRedirect: "/" }),
 	(req, res) => {
-		const tokenString = qs.stringify(req.user);
-		console.log(req.user);
+		const tokenString = qs.stringify(req.user.tokens);
 
-		res.redirect("checkAuth");
+		res.redirect(`http://localhost:4200/login?${tokenString}`);
 	}
 );
+
+router.get("/logout", (req, res) => {
+	req.logout();
+	res.redirect("http://localhost:4200");
+});
 module.exports = router;
