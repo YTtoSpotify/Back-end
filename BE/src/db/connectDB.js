@@ -8,6 +8,7 @@ const connectDb = async () => {
 		console.log("DB listening");
 	} catch (err) {
 		console.log(err);
+		throw err;
 	}
 };
 

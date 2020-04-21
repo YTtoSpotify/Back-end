@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const connectDB = require("./db/connectDB");
 const authRouter = require("./routes/auth/authRoutes");
 const sessionInstance = require("./helpers/sessionCreate");
@@ -12,9 +13,12 @@ connectDB();
 // Session connection with MongoDB database
 app.use(sessionInstance);
 
+// Init passport and passport sessions
 app.use(passport.initialize());
 app.use(passport.session());
+
 app.use(express.json());
+app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 
 // ROUTES
 app.use("/api/auth", authRouter);
