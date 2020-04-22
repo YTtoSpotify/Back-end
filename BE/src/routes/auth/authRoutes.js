@@ -9,7 +9,7 @@ const scope = [
 	"playlist-modify-private",
 ];
 
-const isAuthenticated = (req, res, next) => {
+const isAuthenticated = (err, req, res, next) => {
 	if (req.isAuthenticated()) next();
 	else {
 		return res.status(403).json({ isAuthenticated: false });
