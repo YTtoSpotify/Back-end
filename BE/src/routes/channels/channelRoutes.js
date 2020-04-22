@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const {
 	createChannel,
-	getAllChannels,
+	getChannels,
 	deleteChannel,
 } = require("../../service/channelsService.js");
 const { serverErr } = require("../../helpers/utils.js");
@@ -16,9 +16,20 @@ router.post("/new", async (req, res) => {
 });
 
 router.get("", async (req, res) => {
+	const page = parseInt(req.query.page) || 1;
+	const nameFilter = req.query.nameFilter;
+
 	try {
-		const channels = await getAllChannels();
-		return res.status(200).json({ message: "Channels fetched", channels });
+		const { channels, totalPagesCount, numOfChannels } = await getChannels(
+			page,
+			nameFilter
+		);
+		return res.status(200).json({
+			channels,
+			currentPage: page,
+			pages: totalPagesCount,
+			numOfChannels,
+		});
 	} catch (err) {
 		serverErr(err, res);
 	}
