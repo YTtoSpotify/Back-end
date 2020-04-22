@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./db/connectDB");
 const authRouter = require("./routes/auth/authRoutes");
+const channelRouter = require("./routes/channels/channelRoutes");
 const sessionInstance = require("./helpers/sessionCreate");
 const passport = require("./helpers/passport/passportConfig");
 
@@ -22,6 +23,7 @@ app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 
 // ROUTES
 app.use("/api/auth", authRouter);
+app.use("/api/channels", channelRouter);
 
 const port = process.env.PORT || 5000;
 
