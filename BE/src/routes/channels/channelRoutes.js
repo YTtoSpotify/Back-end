@@ -11,4 +11,12 @@ router.post("/new", async (req, res) => {
 	}
 });
 
+router.get("/", async (req, res) => {
+	try {
+		const channels = await getAllChannels();
+		return res.status(200).json({ message: "Channels fetched", channels });
+	} catch (err) {
+		serverErr(err, res);
+	}
+});
 module.exports = router;
