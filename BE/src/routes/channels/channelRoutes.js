@@ -2,6 +2,7 @@ const router = require("express").Router();
 const {
 	createChannel,
 	getAllChannels,
+	deleteChannel,
 } = require("../../service/channelsService.js");
 const { serverErr } = require("../../helpers/utils.js");
 
@@ -23,5 +24,15 @@ router.get("", async (req, res) => {
 	}
 });
 
-router.delete();
+router.delete("/delete/:channelId", async (req, res) => {
+	try {
+		const channel = await deleteChannel(req.params.channelId);
+		return res
+			.status(200)
+			.json({ message: `Channel ${channel.name} successfully deleted` });
+	} catch (err) {
+		serverErr(err, res);
+	}
+});
+
 module.exports = router;

@@ -3,6 +3,7 @@ const Channel = require("../db/models/channelModel");
 module.exports = {
 	createChannel,
 	getAllChannels,
+	deleteChannel,
 };
 
 async function createChannel(channel) {
@@ -19,6 +20,18 @@ async function getAllChannels() {
 		const channels = await Channel.find();
 		return channels;
 	} catch (err) {
-		throw { message: err.message, status: 400 };
+		throw { message: err.message, status: 404 };
+	}
+}
+
+async function deleteChannel(channelId) {
+	try {
+		const channel = await Channel.findByIdAndDelete(channelId);
+
+		if (!channel) throw { message: "Channel does not exist", status: 404 };
+
+		return channel;
+	} catch (err) {
+		throw { message: err.message, status: 404 };
 	}
 }
