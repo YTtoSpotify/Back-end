@@ -6,12 +6,15 @@ module.exports = {
 	deleteChannel,
 };
 
+const { checkChannelExists } = require("../helpers/channelsServiceHelpers");
+const { ErrorHandler } = require("../helpers/errorHelpers");
+
 async function createChannel(channel) {
 	try {
-		if (!channel) throw { message: "Missing new channel data.", status: 400 };
+		if (!channel) throw new ErrorHandler(400, "Missing new channel data");
 		await new Channel(channel).save();
 	} catch (err) {
-		throw { message: err.message, status: 400 };
+		throw err;
 	}
 }
 
@@ -42,18 +45,18 @@ async function getChannels(page = 1, nameFilter = false) {
 
 		return { channels, totalPagesCount, numOfChannels };
 	} catch (err) {
-		throw { message: err.message, status: 404 };
+		throw new ErrorHandler(err.statusCode, err.statusText);
 	}
 }
 
 async function deleteChannel(channelId) {
 	try {
-		const channel = await Channel.findByIdAndDelete(channelId);
+		await checkChannelExists(channelId);
 
-		if (!channel) throw { message: "Channel does not exist", status: 404 };
+		const channel = await Channel.findByIdAndDelete(channelId);
 
 		return channel;
 	} catch (err) {
-		throw { message: err.message, status: 404 };
+		throw err;
 	}
 }
