@@ -7,7 +7,7 @@ class ErrorHandler extends Error {
 }
 
 const handleError = (err, res) => {
-	let {
+	const {
 		statusCode = 500,
 		message = "We screwed something up. We're looking into it.",
 	} = err;
@@ -17,6 +17,8 @@ const handleError = (err, res) => {
 		statusCode,
 		message,
 	});
+
+	throw err;
 };
 
 module.exports = { ErrorHandler, handleError };
