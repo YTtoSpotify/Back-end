@@ -34,7 +34,9 @@ async function getChannels(page = 1, nameFilter = false) {
 				.sort("name");
 		}
 
-		const numOfChannels = await Channel.count();
+		const numOfChannels = await Channel.count({
+			name: new RegExp(nameFilter, "i"),
+		});
 
 		const totalPagesCount = Math.ceil(numOfChannels / channelsPerPage);
 
