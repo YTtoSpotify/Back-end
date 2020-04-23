@@ -2,7 +2,7 @@ const User = require("../db/models/userModel");
 const { checkChannelExists } = require("../helpers/channelsServiceHelpers");
 const { checkUserExists } = require("../helpers/usersServiceHelpers");
 
-module.exports = { addChannelToUser, removeChannelFromUser };
+module.exports = { addChannelToUser, removeChannelFromUser, getUser };
 
 async function addChannelToUser(channelId, userId) {
 	try {
@@ -19,6 +19,19 @@ async function addChannelToUser(channelId, userId) {
 	}
 }
 
+async function getUser(userId) {
+	try {
+		await checkUserExists(userId);
+
+		const user = await User.findById(userId)
+			.populate("subbedChannels")
+			.exec();
+
+		return user;
+	} catch (err) {
+		throw err;
+	}
+}
 async function removeChannelFromUser(channelId, userId) {
 	try {
 		await checkUserExists(userId);

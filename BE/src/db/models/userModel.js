@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema({
-	subbedChannels: { type: [mongoose.Schema.Types.ObjectId], ref: "Channel" },
+	subbedChannels: [{ type: [mongoose.Schema.Types.ObjectId], ref: "Channel" }],
 	email: String,
 	displayName: String,
 	username: String,
