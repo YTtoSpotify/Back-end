@@ -4,6 +4,9 @@ const cors = require("cors");
 const connectDB = require("./db/connectDB");
 const authRouter = require("./routes/auth/authRoutes");
 const channelRouter = require("./routes/channels/channelRoutes");
+const userRouter = require("./routes/user/userRoutes");
+const { handleError } = require("./helpers/errorHelpers");
+
 const sessionInstance = require("./helpers/sessionCreate");
 const passport = require("./helpers/passport/passportConfig");
 
@@ -24,6 +27,12 @@ app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 // ROUTES
 app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
+app.use("/api/user", userRouter);
+
+//GLOBAL MIDDLEWARE
+app.use((err, req, res, next) => {
+	handleError(err, res);
+});
 
 const port = process.env.PORT || 5000;
 
