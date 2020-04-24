@@ -31,7 +31,7 @@ async function getChannels(page = 1, nameFilter = "") {
 		);
 		return paginationData;
 	} catch (err) {
-		throw new ErrorHandler(err.statusCode, err.statusText);
+		throw err;
 	}
 }
 
@@ -46,7 +46,7 @@ async function getUserChannels(page = 1, nameFilter = "", userChannelsArr) {
 		);
 		return paginationData;
 	} catch (err) {
-		throw new ErrorHandler(err.statusCode, err.statusText);
+		throw err;
 	}
 }
 async function deleteChannel(channelId) {

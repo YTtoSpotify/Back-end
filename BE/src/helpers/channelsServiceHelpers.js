@@ -27,6 +27,6 @@ async function handlePaginationData(filterObject, page) {
 
 		return { channels, totalPagesCount, numOfChannels };
 	} catch (err) {
-		throw new ErrorHandler(err.status, err.statusText);
+		throw err;
 	}
 }

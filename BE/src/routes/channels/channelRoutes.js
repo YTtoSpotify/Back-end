@@ -1,5 +1,8 @@
 const router = require("express").Router();
-const { getChannels } = require("../../service/channelsService.js");
+const {
+	getChannels,
+	getUserChannels,
+} = require("../../service/channelsService.js");
 const { isAuthenticated } = require("../../helpers/utils.js");
 const { handleError } = require("../../helpers/errorHelpers");
 
@@ -12,6 +15,28 @@ router.get("", isAuthenticated, async (req, res) => {
 			page,
 			nameFilter
 		);
+		return res.status(200).json({
+			channels,
+			currentPage: page,
+			pages: totalPagesCount,
+			numOfChannels,
+		});
+	} catch (err) {
+		handleError(err, res);
+	}
+});
+
+router.get("/userChannels", isAuthenticated, async (req, res) => {
+	const page = parseInt(req.query.page) || 1;
+	const nameFilter = req.query.nameFilter;
+
+	try {
+		const {
+			channels,
+			totalPagesCount,
+			numOfChannels,
+		} = await getUserChannels(page, nameFilter, req.user.subbedChannels);
+
 		return res.status(200).json({
 			channels,
 			currentPage: page,
