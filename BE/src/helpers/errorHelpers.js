@@ -7,12 +7,12 @@ class ErrorHandler extends Error {
 }
 
 const handleError = (err, res) => {
-	let { statusCode, message } = err;
+	let statusCode = err.statusCode;
+	let message = err.message;
 
-	// handles internal server errors
 	if (!statusCode) {
 		statusCode = 500;
-		message = "We screwed something up: we're looking into it";
+		message = "Something went wrong on our end: we're looking into it.";
 	}
 
 	res.status(statusCode).json({
