@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const {
-	getChannels,
+	getAvailableChannels,
 	getUserChannels,
 } = require("../../service/channelsService.js");
 const { isAuthenticated } = require("../../helpers/utils.js");
@@ -11,15 +11,13 @@ router.get("", isAuthenticated, async (req, res) => {
 	const nameFilter = req.query.nameFilter;
 
 	try {
-		const { channels, totalPagesCount, numOfChannels } = await getChannels(
+		const paginationData = await getAvailableChannels(
 			page,
-			nameFilter
+			nameFilter,
+			req.user.subbedChannels
 		);
 		return res.status(200).json({
-			channels,
-			currentPage: page,
-			pages: totalPagesCount,
-			numOfChannels,
+			...paginationData,
 		});
 	} catch (err) {
 		handleError(err, res);
@@ -31,17 +29,14 @@ router.get("/userChannels", isAuthenticated, async (req, res) => {
 	const nameFilter = req.query.nameFilter;
 
 	try {
-		const {
-			channels,
-			totalPagesCount,
-			numOfChannels,
-		} = await getUserChannels(page, nameFilter, req.user.subbedChannels);
+		const paginationData = await getUserChannels(
+			page,
+			nameFilter,
+			req.user.subbedChannels
+		);
 
 		return res.status(200).json({
-			channels,
-			currentPage: page,
-			pages: totalPagesCount,
-			numOfChannels,
+			...paginationData,
 		});
 	} catch (err) {
 		handleError(err, res);

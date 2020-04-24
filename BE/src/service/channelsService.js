@@ -1,7 +1,7 @@
 const Channel = require("../db/models/channelModel");
 module.exports = {
 	createChannel,
-	getChannels,
+	getAvailableChannels,
 	getUserChannels,
 	deleteChannel,
 };
@@ -21,11 +21,16 @@ async function createChannel(channel) {
 	}
 }
 
-async function getChannels(page = 1, nameFilter = "") {
+async function getAvailableChannels(
+	page = 1,
+	nameFilter = "",
+	userChannelsArr
+) {
 	try {
 		const paginationData = await handlePaginationData(
 			{
 				name: new RegExp(nameFilter, "i"),
+				_id: { $nin: [...userChannelsArr] },
 			},
 			page
 		);
