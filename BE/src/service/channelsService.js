@@ -1,12 +1,15 @@
 const Channel = require("../db/models/channelModel");
-
 module.exports = {
 	createChannel,
 	getChannels,
+	getUserChannels,
 	deleteChannel,
 };
 
-const { checkChannelExists } = require("../helpers/channelsServiceHelpers");
+const {
+	checkChannelExists,
+	handlePaginationData,
+} = require("../helpers/channelsServiceHelpers");
 const { ErrorHandler } = require("../helpers/errorHelpers");
 
 async function createChannel(channel) {
@@ -18,37 +21,34 @@ async function createChannel(channel) {
 	}
 }
 
-async function getChannels(page = 1, nameFilter = false) {
-	const channelsPerPage = 8;
-
+async function getChannels(page = 1, nameFilter = "") {
 	try {
-		let channels;
-
-		if (nameFilter) {
-			channels = await Channel.find({
+		const paginationData = await handlePaginationData(
+			{
 				name: new RegExp(nameFilter, "i"),
-			})
-				.skip(channelsPerPage * page - channelsPerPage)
-				.limit(channelsPerPage);
-		} else {
-			channels = await Channel.find()
-				.skip(channelsPerPage * page - channelsPerPage)
-				.limit(channelsPerPage)
-				.sort("name");
-		}
-
-		const numOfChannels = await Channel.countDocuments({
-			name: new RegExp(nameFilter, "i"),
-		});
-
-		const totalPagesCount = Math.ceil(numOfChannels / channelsPerPage);
-
-		return { channels, totalPagesCount, numOfChannels };
+			},
+			page
+		);
+		return paginationData;
 	} catch (err) {
 		throw new ErrorHandler(err.statusCode, err.statusText);
 	}
 }
 
+async function getUserChannels(page = 1, nameFilter = "", userChannelsArr) {
+	try {
+		const paginationData = await handlePaginationData(
+			{
+				_id: { $in: [...userChannelsArr] },
+				name: new RegExp(nameFilter, "i"),
+			},
+			page
+		);
+		return paginationData;
+	} catch (err) {
+		throw new ErrorHandler(err.statusCode, err.statusText);
+	}
+}
 async function deleteChannel(channelId) {
 	try {
 		await checkChannelExists(channelId);

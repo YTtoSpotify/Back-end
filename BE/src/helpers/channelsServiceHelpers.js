@@ -1,7 +1,7 @@
 const Channel = require("../db/models/channelModel");
 const { ErrorHandler } = require("../helpers/errorHelpers");
 
-module.exports = { checkChannelExists };
+module.exports = { checkChannelExists, handlePaginationData };
 
 async function checkChannelExists(channelId) {
 	const idString = channelId.toString();
@@ -11,4 +11,22 @@ async function checkChannelExists(channelId) {
 
 	if (!(await Channel.exists({ _id: idString })))
 		throw new ErrorHandler(404, "Channel not found");
+}
+
+async function handlePaginationData(filterObject, page) {
+	const channelsPerPage = 8;
+
+	try {
+		let channels = await Channel.find(filterObject)
+			.skip(channelsPerPage * page - channelsPerPage)
+			.limit(channelsPerPage);
+
+		const numOfChannels = await Channel.countDocuments(filterObject);
+
+		const totalPagesCount = Math.ceil(numOfChannels / channelsPerPage);
+
+		return { channels, totalPagesCount, numOfChannels };
+	} catch (err) {
+		throw new ErrorHandler(err.status, err.statusText);
+	}
 }
