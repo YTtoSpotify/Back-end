@@ -34,6 +34,11 @@ async function getAvailableChannels(
 			},
 			page
 		);
+
+		paginationData.channels.forEach((channel) => {
+			channel.isUserSub = false;
+		});
+
 		return paginationData;
 	} catch (err) {
 		throw err;
@@ -49,6 +54,11 @@ async function getUserChannels(page = 1, nameFilter = "", userChannelsArr) {
 			},
 			page
 		);
+
+		paginationData.channels.forEach((channel) => {
+			channel.isUserSub = true;
+		});
+
 		return paginationData;
 	} catch (err) {
 		throw err;

@@ -20,7 +20,9 @@ async function handlePaginationData(filterObject, page) {
 		let channels = await Channel.find(filterObject)
 			.skip(channelsPerPage * page - channelsPerPage)
 			.limit(channelsPerPage)
-			.sort("name");
+			.sort("name")
+			.lean()
+			.exec();
 
 		const numOfChannels = await Channel.countDocuments(filterObject);
 
