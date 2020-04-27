@@ -27,16 +27,25 @@ async function getAvailableChannels(
 	userChannelsArr
 ) {
 	try {
+		const userChannelIds = userChannelsArr.map((channel) => {
+			channel = channel.toString();
+			return channel;
+		});
+
+		const userChannelsSet = new Set(userChannelIds);
+
 		const paginationData = await handlePaginationData(
 			{
 				name: new RegExp(nameFilter, "i"),
-				_id: { $nin: [...userChannelsArr] },
 			},
 			page
 		);
 
-		paginationData.channels.forEach((channel) => {
-			channel.isUserSub = false;
+		paginationData.channels = paginationData.channels.map((channel) => {
+			const isUserSub = userChannelsSet.has(channel._id.toString());
+
+			channel.isUserSub = isUserSub;
+			return channel;
 		});
 
 		return paginationData;
@@ -55,8 +64,9 @@ async function getUserChannels(page = 1, nameFilter = "", userChannelsArr) {
 			page
 		);
 
-		paginationData.channels.forEach((channel) => {
+		paginationData.channels = paginationData.channels.map((channel) => {
 			channel.isUserSub = true;
+			return channel;
 		});
 
 		return paginationData;
