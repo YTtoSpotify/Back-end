@@ -1,13 +1,10 @@
-module.exports = { serverErr };
+module.exports = { isAuthenticated };
 
-function serverErr(err, res) {
-	if (err.message && err.status) {
-		return res.status(err.status).json({
-			message: err.message,
-		});
-	} else {
-		return res.status(500).json({
-			message: "We screwed something up. We'll look into it.",
-		});
+const { ErrorHandler } = require("./errorHelpers");
+
+function isAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) next();
+	else {
+		throw new ErrorHandler(403, "User not logged in");
 	}
 }

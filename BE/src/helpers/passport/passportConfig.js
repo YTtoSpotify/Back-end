@@ -38,6 +38,10 @@ passport.use(
 				displayName,
 			} = profile;
 
+			const userNameArray = displayName.split(" ");
+			const firstName = userNameArray[0];
+			const lastName = userNameArray[userNameArray.length - 1];
+
 			try {
 				let user = await User.findOne({ spotifyId });
 				if (!user) {
@@ -48,12 +52,13 @@ passport.use(
 						username,
 						spotifyId,
 						photo: photos[0],
+						firstName,
+						lastName,
 					}).save();
 				}
 				return done(null, user);
 			} catch (err) {
 				return done(err, null);
-				throw err;
 			}
 		}
 	)

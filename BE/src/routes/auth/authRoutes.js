@@ -1,6 +1,7 @@
 require("dotenv").config();
 const router = require("express").Router();
 const passport = require("../../helpers/passport/passportConfig");
+const { isAuthenticated } = require("../../helpers/utils");
 
 const scope = [
 	"user-read-private",
@@ -8,13 +9,6 @@ const scope = [
 	"playlist-modify-public",
 	"playlist-modify-private",
 ];
-
-const isAuthenticated = (err, req, res, next) => {
-	if (req.isAuthenticated()) next();
-	else {
-		return res.status(403).json({ isAuthenticated: false });
-	}
-};
 
 router.get("/checkAuth", isAuthenticated, (req, res) => {
 	return res.status(200).json({
