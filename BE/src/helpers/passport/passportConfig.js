@@ -2,6 +2,7 @@ const passport = require("passport");
 const SpotifyStrategy = require("passport-spotify").Strategy;
 require("dotenv").config();
 const User = require("../../db/models/userModel");
+const spotifyApi = require("../spotifyWebApi");
 
 const clientID = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
@@ -9,15 +10,14 @@ const callbackURL = process.env.REDIRECT_URI;
 
 // this converts whatever is passed into 'done' into a bytestream(raw bit data), to be rebuilt by the deserialization function
 // also creates the sesssion with whatever we pass into done
-passport.serializeUser(({ id }, done) => {
-	done(null, id);
+passport.serializeUser(({ _id: id, accessToken, refreshToken }, done) => {
+	done(null, { id, accessToken, refreshToken });
 });
 
 // this assigns req.user with whatever we pass through done
-passport.deserializeUser(async (id, done) => {
-	const user = await User.findById(id);
-	// need to find the actual user in mongo db here
-	done(null, user);
+passport.deserializeUser(async ({ id, accessToken, refreshToken }, done) => {
+	const user = await User.findById(id).lean().exec();
+	done(null, { ...user, accessToken, refreshToken });
 });
 
 const config = {
@@ -30,6 +30,7 @@ passport.use(
 	new SpotifyStrategy(
 		config,
 		async (accessToken, refreshToken, expiresIn, profile, done) => {
+			// grab data from profile for DB users
 			const {
 				username,
 				id: spotifyId,
@@ -38,12 +39,16 @@ passport.use(
 				displayName,
 			} = profile;
 
+			// create first and last names for DB user
 			const userNameArray = displayName.split(" ");
 			const firstName = userNameArray[0];
 			const lastName = userNameArray[userNameArray.length - 1];
 
 			try {
-				let user = await User.findOne({ spotifyId });
+				// check if user exists
+				let user = await User.findOne({ spotifyId }).lean().exec();
+
+				// create user if not
 				if (!user) {
 					user = await new User({
 						subbedChannels: [],
@@ -56,7 +61,12 @@ passport.use(
 						lastName,
 					}).save();
 				}
-				return done(null, user);
+
+				return done(null, {
+					...user,
+					accessToken,
+					refreshToken,
+				});
 			} catch (err) {
 				return done(err, null);
 			}

@@ -8,6 +8,7 @@ const userSchema = mongoose.Schema({
 	spotifyId: String,
 	photo: String,
 	hasPlaylist: { type: Boolean, default: false },
+	spotifyPlaylistId: String,
 	firstName: String,
 	lastName: String,
 });
