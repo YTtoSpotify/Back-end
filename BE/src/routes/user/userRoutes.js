@@ -65,8 +65,6 @@ router.delete(
 			const userId = req.user._id;
 			const channelId = req.params.channelId;
 
-			console.log(req.user);
-
 			await removeChannelFromUser(channelId, userId);
 
 			return res.status(204).end();
