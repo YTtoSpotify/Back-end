@@ -7,7 +7,7 @@ const channelRouter = require("./routes/channels/channelRoutes");
 const userRouter = require("./routes/user/userRoutes");
 const { handleError } = require("./helpers/errorHelpers");
 const xmlParser = require("express-xml-bodyparser");
-
+const Channel = require("./db/models/channelModel");
 const sessionInstance = require("./helpers/sessionCreate");
 const passport = require("./helpers/passport/passportConfig");
 const yw = require("./helpers/youtubeWatcher");
@@ -41,7 +41,7 @@ app.route("/callback")
 	.all((req, res, next) => {
 		next();
 	})
-	.get((req, res) => {
+	.get(async (req, res) => {
 		try {
 			console.log(
 				req.query["hub.challenge"],
@@ -55,7 +55,7 @@ app.route("/callback")
 			return res.status(500).end();
 		}
 	})
-	.post((req, res) => {
+	.post(async (req, res) => {
 		console.log("hit post callback");
 		console.log(req.body.feed.entry[0]);
 		try {
@@ -73,6 +73,8 @@ app.route("/callback")
 // 		const allChannelIds = allChannels.map((channel) => {
 // 			return channel.ytId;
 // 		});
+
+// 		console.log(allChannelIds);
 // 		yw.watch(["UCbVdf1NvbcAw3qPT_wO7ETg"]);
 // 	} catch (err) {
 // 		console.log(err);
@@ -89,7 +91,7 @@ app.route("/callback")
 
 // yw.on("err", () => console.log(err));
 
-// yw.start();
+yw.start();
 
 const port = process.env.PORT || 5000;
 
