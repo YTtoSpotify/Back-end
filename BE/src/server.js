@@ -50,26 +50,30 @@ app.route("/callback")
 		return res.status(200).send("Post hit");
 	});
 
-yw.on("start", async () => {
-	const allChannels = await Channel.find({}).lean().exec();
+// yw.on("start", async () => {
+// 	try {
+// 		const allChannels = await Channel.find({}).lean().exec();
 
-	const allChannelIds = allChannels.map((channel) => {
-		return channel.ytId;
-	});
-	yw.watch(["UCbVdf1NvbcAw3qPT_wO7ETg"]);
-});
+// 		const allChannelIds = allChannels.map((channel) => {
+// 			return channel.ytId;
+// 		});
+// 		yw.watch(["UCbVdf1NvbcAw3qPT_wO7ETg"]);
+// 	} catch (err) {
+// 		console.log(err);
+// 	}
+// });
 
-yw.on("notified", (video) => {
-	console.log(
-		` ******************* Channel: ${video.author}, Title: ${video.title}`
-	);
-	console.log(video);
-	// TODO find all users with channel id and deposit the song into their spotify playlist
-});
+// yw.on("notified", (video) => {
+// 	console.log(
+// 		` ******************* Channel: ${video.author}, Title: ${video.title}`
+// 	);
+// 	console.log(video);
+// 	// TODO find all users with channel id and deposit the song into their spotify playlist
+// });
 
-yw.on("err", () => console.log(err));
+// yw.on("err", () => console.log(err));
 
-yw.start();
+// yw.start();
 
 const port = process.env.PORT || 5000;
 
