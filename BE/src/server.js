@@ -38,28 +38,38 @@ app.use((err, req, res, next) => {
 	handleError(err, res);
 });
 
-app.post("/callback", async (req, res) => {
-	console.log(req.body.feed.entry[0]);
-	try {
-		return res.status(200).send("Post hit");
-	} catch (error) {
-		console.log(error);
-		return res.status(400).end();
-	}
-});
+// app.post("/callback", async (req, res) => {
+// 	console.log(req.body.feed.entry[0]);
+// 	try {
+// 	} catch (error) {
+// 		console.log(error);
+// 		return res.status(400).end();
+// 	}
+// });
+// app.get("/callback", async (req, res) => {
+// 	try {
+// 		console.log(
+// 			req.query["hub.challenge"],
+// 			new Date(Date.now()).toLocaleTimeString()
+// 		);
+// 		return res.status(200).send(req.query["hub.challenge"] || "no challenge");
+// 	} catch (error) {
+// 		console.log(error);
+// 		return res.status(400).end();
+// 	}
+// });
 
-app.get("/callback", async (req, res) => {
-	try {
-		console.log(
-			req.query["hub.challenge"],
-			new Date(Date.now()).toLocaleTimeString()
-		);
+app.route("/callback")
+	.all((req, res, next) => {
+		next();
+	})
+	.get((req, res) => {
 		return res.status(200).send(req.query["hub.challenge"] || "no challenge");
-	} catch (error) {
-		console.log(error);
-		return res.status(400).end();
-	}
-});
+	})
+	.post((req, res) => {
+		console.log(req.body.feed.entry[0]);
+		return res.status(200).send("Post hit");
+	});
 
 yw.on("start", async () => {
 	const allChannels = await Channel.find({}).lean().exec();
