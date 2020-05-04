@@ -7,9 +7,10 @@ const channelRouter = require("./routes/channels/channelRoutes");
 const userRouter = require("./routes/user/userRoutes");
 const { handleError } = require("./helpers/errorHelpers");
 
+const Channel = require("./db/models/channelModel");
 const sessionInstance = require("./helpers/sessionCreate");
 const passport = require("./helpers/passport/passportConfig");
-
+const yw = require("./helpers/youtubeWatcher");
 const app = express();
 
 // mongoDB initial connection
@@ -33,6 +34,27 @@ app.use("/api/user", userRouter);
 app.use((err, req, res, next) => {
 	handleError(err, res);
 });
+
+yw.on("start", async () => {
+	const allChannels = await Channel.find({}).lean().exec();
+
+	const allChannelIds = allChannels.map((channel) => {
+		return channel.ytId;
+	});
+	yw.watch(["UCbVdf1NvbcAw3qPT_wO7ETg"]);
+});
+
+yw.on("notified", (video) => {
+	console.log(
+		` ******************* Channel: ${video.author}, Title: ${video.title}`
+	);
+	console.log(video);
+	// TODO find all users with channel id and deposit the song into their spotify playlist
+});
+
+yw.on("err", () => console.log(err));
+
+yw.start();
 
 const port = process.env.PORT || 5000;
 

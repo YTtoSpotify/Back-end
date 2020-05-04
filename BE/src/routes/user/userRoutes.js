@@ -26,7 +26,7 @@ router.get("", isAuthenticated, async (req, res) => {
 	}
 });
 
-router.put("/addChannel/:channelId", isAuthenticated, async (req, res) => {
+router.put("/addChannel/:channelId", [isAuthenticated], async (req, res) => {
 	try {
 		const userId = req.user._id;
 		const channelId = req.params.channelId;

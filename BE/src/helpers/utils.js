@@ -9,11 +9,26 @@ function isAuthenticated(req, res, next) {
 	}
 }
 
-function handleSpotifyApiTokens(req, res, next) {
-	const { accessToken, refreshToken } = req.user;
+async function handleSpotifyApiTokens(req, res, next) {
+	const { accessToken, refreshToken, tokenExpirationDate } = req.user;
 
 	if (!spotifyApi.getAccessToken()) spotifyApi.setAccessToken(accessToken);
 	if (!spotifyApi.getRefreshToken()) spotifyApi.setRefreshToken(refreshToken);
 
+	const expirationDate = new Date(tokenExpirationDate);
+
+	if (expirationDate.getTime() - Date.now() <= 0) {
+		const {
+			body: { access_token, expires_in },
+		} = await spotifyApi.refreshAccessToken();
+
+		spotifyApi.setAccessToken(access_token);
+
+		// change session access token
+		req.session.passport.user.accessToken = access_token;
+		// change session expiration date
+		const newExpirationDate = new Date(Date.now() + expires_in * 1000);
+		req.session.passport.user.tokenExpirationDate = newExpirationDate;
+	}
 	next();
 }
