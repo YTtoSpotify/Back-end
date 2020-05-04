@@ -5,6 +5,8 @@ const connectDB = require("./db/connectDB");
 const authRouter = require("./routes/auth/authRoutes");
 const channelRouter = require("./routes/channels/channelRoutes");
 const userRouter = require("./routes/user/userRoutes");
+const hubRouter = require("./routes/youtubeHub/hubRoutes");
+
 const { handleError } = require("./helpers/errorHelpers");
 const xmlParser = require("express-xml-bodyparser");
 const Channel = require("./db/models/channelModel");
@@ -31,40 +33,11 @@ app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
-
+app.use("/api/hub", hubRouter);
 //GLOBAL MIDDLEWARE
 app.use((err, req, res, next) => {
 	handleError(err, res);
 });
-
-app.route("/callback")
-	.all((req, res, next) => {
-		next();
-	})
-	.get(async (req, res) => {
-		try {
-			console.log(
-				req.query["hub.challenge"],
-				new Date(Date.now()).toLocaleTimeString()
-			);
-			return res
-				.status(200)
-				.send(req.query["hub.challenge"] || "no challenge");
-		} catch (error) {
-			console.log(error);
-			return res.status(500).end();
-		}
-	})
-	.post(async (req, res) => {
-		console.log("hit post callback");
-		try {
-			console.log(req.body.feed.entry[0]);
-			return res.status(200).send("Post hit");
-		} catch (error) {
-			console.log(error);
-			return res.status(500).end();
-		}
-	});
 
 // yw.on("start", async () => {
 // 	try {
