@@ -6,6 +6,7 @@ const authRouter = require("./routes/auth/authRoutes");
 const channelRouter = require("./routes/channels/channelRoutes");
 const userRouter = require("./routes/user/userRoutes");
 const { handleError } = require("./helpers/errorHelpers");
+const xmlParser = require("express-xml-bodyparser");
 
 const Channel = require("./db/models/channelModel");
 const sessionInstance = require("./helpers/sessionCreate");
@@ -23,6 +24,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use(express.json());
+app.use(xmlParser());
+
 app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 
 // ROUTES
@@ -49,8 +52,8 @@ app.get("/callback", async (req, res) => {
 });
 
 app.post("/callback", async (req, res) => {
+	console.log(req.body.feed.entry[0]);
 	try {
-		console.log("hit post callback");
 		return res.status(200).send("Post hit");
 	} catch (error) {
 		console.log(error);
