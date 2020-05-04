@@ -38,27 +38,6 @@ app.use((err, req, res, next) => {
 	handleError(err, res);
 });
 
-// app.post("/callback", async (req, res) => {
-// 	console.log(req.body.feed.entry[0]);
-// 	try {
-// 	} catch (error) {
-// 		console.log(error);
-// 		return res.status(400).end();
-// 	}
-// });
-// app.get("/callback", async (req, res) => {
-// 	try {
-// 		console.log(
-// 			req.query["hub.challenge"],
-// 			new Date(Date.now()).toLocaleTimeString()
-// 		);
-// 		return res.status(200).send(req.query["hub.challenge"] || "no challenge");
-// 	} catch (error) {
-// 		console.log(error);
-// 		return res.status(400).end();
-// 	}
-// });
-
 app.route("/callback")
 	.all((req, res, next) => {
 		next();
