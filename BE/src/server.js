@@ -47,6 +47,7 @@ app.get("/callback", async (req, res) => {
 		return res.status(400).end();
 	}
 });
+
 app.post("/callback", async (req, res) => {
 	try {
 		console.log("hit post callback");
