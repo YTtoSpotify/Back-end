@@ -64,7 +64,7 @@ app.use((err, req, res, next) => {
 
 // yw.on("err", () => console.log(err));
 
-yw.start();
+// yw.start();
 
 const port = process.env.PORT || 5000;
 
