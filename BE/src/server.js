@@ -8,7 +8,6 @@ const userRouter = require("./routes/user/userRoutes");
 const { handleError } = require("./helpers/errorHelpers");
 const xmlParser = require("express-xml-bodyparser");
 
-const Channel = require("./db/models/channelModel");
 const sessionInstance = require("./helpers/sessionCreate");
 const passport = require("./helpers/passport/passportConfig");
 const yw = require("./helpers/youtubeWatcher");
@@ -43,11 +42,28 @@ app.route("/callback")
 		next();
 	})
 	.get((req, res) => {
-		return res.status(200).send(req.query["hub.challenge"] || "no challenge");
+		try {
+			console.log(
+				req.query["hub.challenge"],
+				new Date(Date.now()).toLocaleTimeString()
+			);
+			return res
+				.status(200)
+				.send(req.query["hub.challenge"] || "no challenge");
+		} catch (error) {
+			console.log(error);
+			return res.status(500).end();
+		}
 	})
 	.post((req, res) => {
+		console.log("hit post callback");
 		console.log(req.body.feed.entry[0]);
-		return res.status(200).send("Post hit");
+		try {
+			return res.status(200).send("Post hit");
+		} catch (error) {
+			console.log(error);
+			return res.status(500).end();
+		}
 	});
 
 // yw.on("start", async () => {
