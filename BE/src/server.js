@@ -35,6 +35,28 @@ app.use((err, req, res, next) => {
 	handleError(err, res);
 });
 
+app.get("/callback", async (req, res) => {
+	try {
+		console.log(
+			req.query["hub.challenge"],
+			new Date(Date.now()).toLocaleTimeString()
+		);
+		return res.status(200).send(req.query["hub.challenge"] || "no challenge");
+	} catch (error) {
+		console.log(error);
+		return res.status(400).end();
+	}
+});
+app.post("/callback", async (req, res) => {
+	try {
+		console.log("hit post callback");
+		return res.status(200).send("Post hit");
+	} catch (error) {
+		console.log(error);
+		return res.status(400).end();
+	}
+});
+
 yw.on("start", async () => {
 	const allChannels = await Channel.find({}).lean().exec();
 
