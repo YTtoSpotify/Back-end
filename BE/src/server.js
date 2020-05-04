@@ -57,8 +57,8 @@ app.route("/callback")
 	})
 	.post(async (req, res) => {
 		console.log("hit post callback");
-		console.log(req.body.feed.entry[0]);
 		try {
+			console.log(req.body.feed.entry[0]);
 			return res.status(200).send("Post hit");
 		} catch (error) {
 			console.log(error);
