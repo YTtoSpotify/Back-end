@@ -7,10 +7,6 @@ router
 	})
 	.get(async (req, res) => {
 		try {
-			console.log(
-				req.query["hub.challenge"],
-				new Date(Date.now()).toLocaleTimeString()
-			);
 			return res
 				.status(200)
 				.send(req.query["hub.challenge"] || "no challenge");

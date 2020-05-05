@@ -3,7 +3,6 @@ const convert = require("xml-js");
 require("dotenv").config();
 const Channel = require("../db/models/channelModel");
 const User = require("../db/models/userModel");
-const mongoose = require("mongoose");
 const SpotifyWebApi = require("spotify-web-api-node");
 const {
 	checkTokenExpiration,
@@ -30,96 +29,123 @@ function getLatestVideoFromXMLFeed(channelXMLFeed) {
 	return { videoTitle, videoId };
 }
 
-async function scrapeChannels(db) {
-	const tempSpotifyApi = new SpotifyWebApi({
-		clientId: process.env.CLIENT_ID,
-		clientSecret: process.env.CLIENT_SECRET,
-		redirectUri: process.env.REDIRECT_URI,
+function cleanVideoTitle(videoTitle) {
+	// split video title at dash
+	const noDashTitle = videoTitle.split("-");
+	// strip whitespace and remove all parentheses and their enclosed text
+	const cleanedTitles = noDashTitle.map((string, i) => {
+		const cleanedTitle = string.replace(/\(([^\)]+)\)/g, "").trim();
+		return cleanedTitle;
 	});
-
-	// fetch all channel ids
-	const channels = await await Channel.find({}).lean().exec();
-	// fetch all active sessions
-	const activeSessionDocs = await mongoose.connection
-		.collection("sessions")
-		.find({})
-		.toArray();
-
-	// grab session data out of session
-	const activeSessionTokens = await fetchActiveSessions();
-
-	channels.forEach(async (channel) => {
-		// get feed xml from youtube channel xml feed
-		const page = await axios.get(
-			`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.ytId}`
-		);
-
-		// get title and id of most recent upload
-		const { videoTitle, videoId } = getLatestVideoFromXMLFeed(page);
-
-		// set latest channel video id to fetched channel id
-		if (!channel.latestUploadId || channel.latestUploadId != videoId) {
-			await Channel.updateOne(
-				{ _id: channel._id },
-				{ latestUploadId: videoId }
-			);
-		}
-
-		// get all user ids of users watching channel
-		const subscribedUsers = await await User.find({
-			subbedChannels: channel._id,
-		})
-			.lean()
-			.exec();
-
-		// add spotify track to each subscribed user playlist
-		subscribedUsers.forEach(async (user) => {
-			// fetch session from object
-			const userSession = activeSessionTokens[user._id];
-
-			// set refresh token
-			tempSpotifyApi.setRefreshToken(userSession.refreshToken);
-
-			// get new access token if expired
-			if (checkTokenExpiration(userSession.tokenExpirationDate)) {
-				try {
-					// get new access token and expiration date from token refresh
-					const {
-						body: { access_token, expires_in },
-					} = await tempSpotifyApi.refreshAccessToken();
-
-					// update temporary object properties related to session
-					userSession.accessToken = access_token;
-					userSession.tokenExpirationDate = new Date(
-						Date.now() + expires_in * 1000
-					);
-
-					// update session in DB
-					refreshSessionAccessToken(userSession.sessionId, {
-						access_token,
-						expires_in,
-					});
-				} catch (error) {
-					console.log(error);
-				}
-			}
-
-			tempSpotifyApi.setAccessToken(userSession.accessToken);
-
-			console.log(videoTitle);
-			// split video title at dash
-			const noDashTitle = videoTitle.split("-");
-
-			// strip whitespace
-			const noWhiteSpaceTitle = noDashTitle.map((string, i) =>
-				noDashTitle[i].trim()
-			);
-
-			console.log(noWhiteSpaceTitle);
-
-			// tempSpotifyApi.addTracksToPlaylist(user.play);
-		});
-	});
+	return cleanedTitles;
 }
 
-scrapeChannels();
+async function scrapeChannels() {
+	try {
+		const tempSpotifyApi = new SpotifyWebApi({
+			clientId: process.env.CLIENT_ID,
+			clientSecret: process.env.CLIENT_SECRET,
+			redirectUri: process.env.REDIRECT_URI,
+		});
+
+		const channels = await Channel.find().sort({ name: "asc" }).lean().exec();
+
+		// fetch active sessions objects
+		const activeSessionTokens = await fetchActiveSessions();
+
+		const latestVideosData = await Promise.all(
+			channels.map(async (channel) => {
+				// get feed xml from youtube channel xml feed
+				const page = await axios.get(
+					`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.ytId}`
+				);
+
+				// get title and id of most recent upload
+				const { videoTitle, videoId } = getLatestVideoFromXMLFeed(page);
+
+				return {
+					videoTitle,
+					videoId,
+					channelId: channel._id,
+				};
+			})
+		);
+
+		await Promise.all(
+			latestVideosData.map(async (video) => {
+				// fetch all users subbed to channel that uploaded video
+				const users = await User.find({ subbedChannels: video.channelId })
+					.lean()
+					.exec();
+
+				return Promise.all(
+					users.map(async (user) => {
+						// get session associated with user
+						const userSession = activeSessionTokens[user._id];
+
+						// set refresh token
+						tempSpotifyApi.setRefreshToken(userSession.refreshToken);
+
+						// check if token expired
+						if (checkTokenExpiration(userSession.tokenExpirationDate)) {
+							// get new access token and expiration timestamp
+							const {
+								body: { access_token, expires_in },
+							} = await tempSpotifyApi.refreshAccessToken();
+
+							// update userSession in local object
+							userSession.accessToken = access_token;
+							userSession.tokenExpirationDate = new Date(
+								Date.now() + expires_in * 1000
+							);
+
+							// update session in db
+							await refreshSessionAccessToken(userSession.sessionId, {
+								access_token,
+								expires_in,
+							});
+						}
+
+						// set access token
+						tempSpotifyApi.setAccessToken(userSession.accessToken);
+
+						//get cleaned artist and song names
+						const [artistName, songName] = cleanVideoTitle(
+							video.videoTitle
+						);
+
+						const songs = await tempSpotifyApi.searchTracks(
+							`track: ${songName} artist: ${artistName}`,
+							{ limit: 1 }
+						);
+
+						const song = songs.body.tracks.items[0];
+
+						if (song) {
+							const songDBChannel = await Channel.findOneAndUpdate(
+								{ _id: video.channelId },
+								{ latestUploadId: video.videoId }
+							)
+								.lean()
+								.exec();
+
+							if (!(songDBChannel.latestUploadId === video.videoId)) {
+								// add song to playlist
+								try {
+									await tempSpotifyApi.addTracksToPlaylist(
+										user.spotifyPlaylistId,
+										[song.uri]
+									);
+								} catch (err) {
+									throw err;
+								}
+							}
+						}
+					})
+				);
+			})
+		);
+	} catch (err) {
+		throw err;
+	}
+}
