@@ -6,6 +6,7 @@ module.exports = {
 	fetchActiveSessions,
 	cleanVideoTitle,
 	getLatestVideoFromXMLFeed,
+	isSongInSpotifyPlaylist,
 };
 
 const convert = require("xml-js");
@@ -83,7 +84,6 @@ async function refreshSessionAccessToken(sessionId, tokenData) {
 			.collection("sessions")
 			.updateOne({ _id: sessionId }, { $set: { session: sessionString } });
 	} catch (err) {
-		console.log(err);
 		throw err;
 	}
 }
@@ -109,7 +109,6 @@ async function fetchActiveSessions() {
 
 		return activeSessionsDict;
 	} catch (err) {
-		console.log(err);
 		throw err;
 	}
 }
@@ -140,4 +139,16 @@ function getLatestVideoFromXMLFeed(channelXMLFeed) {
 	const { text: videoTitle } = latestVideo.elements[3].elements[0];
 
 	return { videoTitle, videoId };
+}
+
+function isSongInSpotifyPlaylist(playlistTrackUriArray, newTrackUri) {
+	// make set of track uids for O(1) checks
+	const trackIdSet = new Set(playlistTrackUriArray);
+
+	// return boolean indicating if track is already in playlist
+	if (trackIdSet.has(newTrackUri)) {
+		return true;
+	} else {
+		return false;
+	}
 }

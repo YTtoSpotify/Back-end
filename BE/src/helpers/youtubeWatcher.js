@@ -9,6 +9,7 @@ const {
 	fetchActiveSessions,
 	cleanVideoTitle,
 	getLatestVideoFromXMLFeed,
+	isSongInSpotifyPlaylist,
 } = require("../helpers/utils");
 
 module.exports = { scrapeChannels };
@@ -98,7 +99,23 @@ async function scrapeChannels() {
 						.lean()
 						.exec();
 
-					if (!(songDBChannel.latestUploadId === video.videoId)) {
+					const {
+						body: { items },
+					} = await tempSpotifyApi.getPlaylistTracks(
+						user.spotifyPlaylistId
+					);
+
+					const songUris = items.map((trackObject) => {
+						return trackObject.track.uri;
+					});
+
+					// validate that song is not in playlist already and song is not the previous latest upload
+					// playlist check ensures if channels upload same song it is not added to the playlist twice
+					// latest upload check ensures that songs don't get added again after bi-weekly playlist wipe
+					if (
+						!isSongInSpotifyPlaylist(songUris, song.uri) &&
+						!(songDBChannel.latestUploadId === video.videoId)
+					) {
 						// add song to playlist
 						try {
 							await tempSpotifyApi.addTracksToPlaylist(
