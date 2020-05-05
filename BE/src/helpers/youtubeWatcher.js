@@ -1,44 +1,17 @@
 const axios = require("axios");
-const convert = require("xml-js");
-require("dotenv").config();
 const Channel = require("../db/models/channelModel");
 const User = require("../db/models/userModel");
 const SpotifyWebApi = require("spotify-web-api-node");
+require("dotenv").config();
+
 const {
-	checkTokenExpiration,
 	refreshSessionAccessToken,
 	fetchActiveSessions,
+	cleanVideoTitle,
+	getLatestVideoFromXMLFeed,
 } = require("../helpers/utils");
 
 module.exports = { scrapeChannels };
-
-function getLatestVideoFromXMLFeed(channelXMLFeed) {
-	// convert xml to js object
-	const allXMLElements = convert.xml2js(channelXMLFeed.data).elements[0]
-		.elements;
-
-	// grab latest video uploaded from xml
-	const latestVideo = allXMLElements.find((el) => {
-		return el.name === "entry" && el.elements && el.elements.length === 9;
-	});
-
-	// destructure video id and title from nested elements in xml
-	const { text: videoId } = latestVideo.elements[1].elements[0];
-	const { text: videoTitle } = latestVideo.elements[3].elements[0];
-
-	return { videoTitle, videoId };
-}
-
-function cleanVideoTitle(videoTitle) {
-	// split video title at dash
-	const noDashTitle = videoTitle.split("-");
-	// strip whitespace and remove all parentheses and their enclosed text
-	const cleanedTitles = noDashTitle.map((string, i) => {
-		const cleanedTitle = string.replace(/\(([^\)]+)\)/g, "").trim();
-		return cleanedTitle;
-	});
-	return cleanedTitles;
-}
 
 const tempSpotifyApi = new SpotifyWebApi({
 	clientId: process.env.CLIENT_ID,
@@ -86,25 +59,22 @@ async function scrapeChannels() {
 				// set refresh token
 				tempSpotifyApi.setRefreshToken(userSession.refreshToken);
 
-				// check if token expired
-				if (checkTokenExpiration(userSession.tokenExpirationDate)) {
-					// get new access token and expiration timestamp
-					const {
-						body: { access_token, expires_in },
-					} = await tempSpotifyApi.refreshAccessToken();
+				// get new access token and expiration timestamp
+				const {
+					body: { access_token, expires_in },
+				} = await tempSpotifyApi.refreshAccessToken();
 
-					// update userSession in local object
-					userSession.accessToken = access_token;
-					userSession.tokenExpirationDate = new Date(
-						Date.now() + expires_in * 1000
-					);
+				// update userSession in local object
+				userSession.accessToken = access_token;
+				userSession.tokenExpirationDate = new Date(
+					Date.now() + expires_in * 1000
+				);
 
-					// update session in db
-					await refreshSessionAccessToken(userSession.sessionId, {
-						access_token,
-						expires_in,
-					});
-				}
+				// update session in db
+				await refreshSessionAccessToken(userSession.sessionId, {
+					access_token,
+					expires_in,
+				});
 
 				// set access token
 				tempSpotifyApi.setAccessToken(userSession.accessToken);
@@ -122,7 +92,8 @@ async function scrapeChannels() {
 				if (song) {
 					const songDBChannel = await Channel.findOneAndUpdate(
 						{ _id: video.channelId },
-						{ latestUploadId: video.videoId }
+						{ latestUploadId: video.videoId },
+						{ useFindAndModify: false }
 					)
 						.lean()
 						.exec();
@@ -146,4 +117,4 @@ async function scrapeChannels() {
 	}
 }
 
-// scrapeChannels();
+scrapeChannels();

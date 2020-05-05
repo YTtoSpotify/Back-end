@@ -13,10 +13,6 @@ const userSchema = mongoose.Schema({
 	lastName: String,
 });
 
-userSchema.index(
-	{ "subbedChannels.1": 1 },
-	{ partialFilterExpression: { "subbedChannels.1": { $exists: true } } }
-);
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;

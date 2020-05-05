@@ -4,7 +4,11 @@ module.exports = {
 	checkTokenExpiration,
 	refreshSessionAccessToken,
 	fetchActiveSessions,
+	cleanVideoTitle,
+	getLatestVideoFromXMLFeed,
 };
+
+const convert = require("xml-js");
 
 const mongoose = require("mongoose");
 
@@ -77,7 +81,7 @@ async function refreshSessionAccessToken(sessionId, tokenData) {
 		// update session
 		await mongoose.connection
 			.collection("sessions")
-			.update({ _id: sessionId }, { session: sessionString });
+			.updateOne({ _id: sessionId }, { $set: { session: sessionString } });
 	} catch (err) {
 		console.log(err);
 		throw err;
@@ -108,4 +112,32 @@ async function fetchActiveSessions() {
 		console.log(err);
 		throw err;
 	}
+}
+
+function cleanVideoTitle(videoTitle) {
+	// split video title at dash
+	const noDashTitle = videoTitle.split("-");
+	// strip whitespace and remove all parentheses and their enclosed text
+	const cleanedTitles = noDashTitle.map((string, i) => {
+		const cleanedTitle = string.replace(/\(([^\)]+)\)/g, "").trim();
+		return cleanedTitle;
+	});
+	return cleanedTitles;
+}
+
+function getLatestVideoFromXMLFeed(channelXMLFeed) {
+	// convert xml to js object
+	const allXMLElements = convert.xml2js(channelXMLFeed.data).elements[0]
+		.elements;
+
+	// grab latest video uploaded from xml
+	const latestVideo = allXMLElements.find((el) => {
+		return el.name === "entry" && el.elements && el.elements.length === 9;
+	});
+
+	// destructure video id and title from nested elements in xml
+	const { text: videoId } = latestVideo.elements[1].elements[0];
+	const { text: videoTitle } = latestVideo.elements[3].elements[0];
+
+	return { videoTitle, videoId };
 }
