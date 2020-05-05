@@ -40,14 +40,14 @@ function cleanVideoTitle(videoTitle) {
 	return cleanedTitles;
 }
 
+const tempSpotifyApi = new SpotifyWebApi({
+	clientId: process.env.CLIENT_ID,
+	clientSecret: process.env.CLIENT_SECRET,
+	redirectUri: process.env.REDIRECT_URI,
+});
+
 async function scrapeChannels() {
 	try {
-		const tempSpotifyApi = new SpotifyWebApi({
-			clientId: process.env.CLIENT_ID,
-			clientSecret: process.env.CLIENT_SECRET,
-			redirectUri: process.env.REDIRECT_URI,
-		});
-
 		const channels = await Channel.find().sort({ name: "asc" }).lean().exec();
 
 		// fetch active sessions objects
@@ -71,81 +71,79 @@ async function scrapeChannels() {
 			})
 		);
 
-		await Promise.all(
-			latestVideosData.map(async (video) => {
-				// fetch all users subbed to channel that uploaded video
-				const users = await User.find({ subbedChannels: video.channelId })
-					.lean()
-					.exec();
-
-				return Promise.all(
-					users.map(async (user) => {
-						// get session associated with user
-						const userSession = activeSessionTokens[user._id];
-
-						// set refresh token
-						tempSpotifyApi.setRefreshToken(userSession.refreshToken);
-
-						// check if token expired
-						if (checkTokenExpiration(userSession.tokenExpirationDate)) {
-							// get new access token and expiration timestamp
-							const {
-								body: { access_token, expires_in },
-							} = await tempSpotifyApi.refreshAccessToken();
-
-							// update userSession in local object
-							userSession.accessToken = access_token;
-							userSession.tokenExpirationDate = new Date(
-								Date.now() + expires_in * 1000
-							);
-
-							// update session in db
-							await refreshSessionAccessToken(userSession.sessionId, {
-								access_token,
-								expires_in,
-							});
-						}
-
-						// set access token
-						tempSpotifyApi.setAccessToken(userSession.accessToken);
-
-						//get cleaned artist and song names
-						const [artistName, songName] = cleanVideoTitle(
-							video.videoTitle
-						);
-
-						const songs = await tempSpotifyApi.searchTracks(
-							`track: ${songName} artist: ${artistName}`,
-							{ limit: 1 }
-						);
-
-						const song = songs.body.tracks.items[0];
-
-						if (song) {
-							const songDBChannel = await Channel.findOneAndUpdate(
-								{ _id: video.channelId },
-								{ latestUploadId: video.videoId }
-							)
-								.lean()
-								.exec();
-
-							if (!(songDBChannel.latestUploadId === video.videoId)) {
-								// add song to playlist
-								try {
-									await tempSpotifyApi.addTracksToPlaylist(
-										user.spotifyPlaylistId,
-										[song.uri]
-									);
-								} catch (err) {
-									throw err;
-								}
-							}
-						}
-					})
-				);
+		await latestVideosData.forEach(async (video) => {
+			// fetch all users subbed to channel that uploaded video
+			const users = await User.find({
+				subbedChannels: video.channelId,
 			})
-		);
+				.lean()
+				.exec();
+
+			await users.forEach(async (user) => {
+				// get session associated with user
+				const userSession = activeSessionTokens[user._id];
+
+				// set refresh token
+				tempSpotifyApi.setRefreshToken(userSession.refreshToken);
+
+				// check if token expired
+				if (checkTokenExpiration(userSession.tokenExpirationDate)) {
+					// get new access token and expiration timestamp
+					const {
+						body: { access_token, expires_in },
+					} = await tempSpotifyApi.refreshAccessToken();
+
+					// update userSession in local object
+					userSession.accessToken = access_token;
+					userSession.tokenExpirationDate = new Date(
+						Date.now() + expires_in * 1000
+					);
+
+					// update session in db
+					await refreshSessionAccessToken(userSession.sessionId, {
+						access_token,
+						expires_in,
+					});
+				}
+
+				// set access token
+				tempSpotifyApi.setAccessToken(userSession.accessToken);
+
+				//get cleaned artist and song names
+				const [artistName, songName] = cleanVideoTitle(video.videoTitle);
+
+				const songs = await tempSpotifyApi.searchTracks(
+					`track: ${songName} artist: ${artistName}`,
+					{ limit: 1 }
+				);
+
+				const song = songs.body.tracks.items[0];
+
+				if (song) {
+					const songDBChannel = await Channel.findOneAndUpdate(
+						{ _id: video.channelId },
+						{ latestUploadId: video.videoId }
+					)
+						.lean()
+						.exec();
+
+					if (!(songDBChannel.latestUploadId === video.videoId)) {
+						// add song to playlist
+						try {
+							await tempSpotifyApi.addTracksToPlaylist(
+								user.spotifyPlaylistId,
+								[song.uri]
+							);
+						} catch (err) {
+							throw err;
+						}
+					}
+				}
+			});
+		});
 	} catch (err) {
 		throw err;
 	}
 }
+
+// scrapeChannels();

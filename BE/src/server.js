@@ -54,7 +54,6 @@ setInterval(() => {
 	scrapeChannels();
 }, millisTill10);
 
-scrapeChannels();
 app.get("/", (req, res) => {
 	res.status(200).json({ message: `Server running on port ${port}` });
 });
