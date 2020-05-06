@@ -191,7 +191,8 @@ async function addSongToUserPlaylist(user, video, cache) {
 			// get song object
 			const spotifySong = songs.body.tracks.items[0];
 
-			if (!spotifySong) console.log(`Could not find song ${cleanedTitle}`);
+			if (!spotifySong)
+				console.log(`************** Could not find song ${cleanedTitle}`);
 			if (spotifySong) {
 				// store in cache if spotify has the song
 				cache.set(cacheKey, spotifySong.uri);
