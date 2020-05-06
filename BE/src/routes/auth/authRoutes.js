@@ -29,8 +29,8 @@ router.get(
 router.get(
 	"/callback",
 	passport.authenticate("spotify", {
-		failureRedirect: "http://localhost:4200/login",
-		successRedirect: "http://localhost:4200/authenticate",
+		failureRedirect: `${process.env.CLIENT_URL}/login`,
+		successRedirect: `${process.env.CLIENT_URL}/authenticate`,
 	}),
 	(req, res) => {}
 );
@@ -41,7 +41,7 @@ router.get("/profile", (req, res) => {
 
 router.get("/logout", (req, res) => {
 	req.logout();
-	res.redirect("http://localhost:4200/login");
+	res.redirect(`${process.env.CLIENT_URL}/login`);
 });
 
 module.exports = router;
