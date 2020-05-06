@@ -116,15 +116,31 @@ async function fetchActiveSessions() {
 }
 
 function cleanVideoTitle(videoTitle) {
-	// split video title at dash
-	const noDashTitle = videoTitle.split("-");
-	// strip whitespace and remove all parentheses and their enclosed text
-	const cleanedTitles = noDashTitle.map((string, i) => {
-		const cleanedTitle = string.replace(/\(([(Lyrics)\)]+)\)/g, "").trim();
-		return cleanedTitle;
+	// all values to remove
+	const stringsToRemove = new Set([
+		"\\(",
+		"\\)",
+		"&",
+		"ft.",
+		"feat.",
+		",",
+		"-",
+		"lyrics",
+		"stripped down version",
+		"official music video",
+	]);
+
+	let regexReplaceString = "";
+
+	stringsToRemove.forEach((string) => {
+		regexReplaceString += `${string}|`;
 	});
 
-	return cleanedTitles;
+	const stripRegex = new RegExp(regexReplaceString, "gi");
+
+	const cleanedTitleString = videoTitle.replace(stripRegex, "");
+
+	return cleanedTitleString;
 }
 
 function getLatestVideoFromXMLFeed(channelXMLFeed) {
@@ -158,22 +174,24 @@ function isSongInSpotifyPlaylist(playlistTrackUriArray, newTrackUri) {
 
 async function addSongToUserPlaylist(user, video, cache) {
 	//get cleaned artist and song names
-	const [artistName, songName] = cleanVideoTitle(video.videoTitle);
+	const cleanedTitle = cleanVideoTitle(video.videoTitle);
 
 	// save key for cache item
-	const cacheKey = `${songName} - ${artistName}`;
+	const cacheKey = cleanedTitle;
 
 	let songUri = null;
 
 	try {
 		// if song not in cache
 		if (!cache.get(cacheKey)) {
-			const songQuery = `track: ${songName} artist: ${artistName}`;
 			// fetch song from spotify
-			const songs = await spotifyApi.searchTracks(songQuery, { limit: 1 });
+			const songs = await spotifyApi.searchTracks(cleanedTitle, {
+				limit: 1,
+			});
 			// get song object
 			const spotifySong = songs.body.tracks.items[0];
 
+			if (!spotifySong) console.log(`Could not find song ${cleanedTitle}`);
 			if (spotifySong) {
 				// store in cache if spotify has the song
 				cache.set(cacheKey, spotifySong.uri);
