@@ -107,5 +107,3 @@ async function scrapeChannels() {
 		throw err;
 	}
 }
-
-scrapeChannels();
