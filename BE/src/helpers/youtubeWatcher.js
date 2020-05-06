@@ -1,7 +1,7 @@
 const axios = require("axios");
 const Channel = require("../db/models/channelModel");
 const User = require("../db/models/userModel");
-const SpotifyWebApi = require("spotify-web-api-node");
+const spotifyApi = require("./spotifyWebApi");
 require("dotenv").config();
 
 const {
@@ -14,12 +14,6 @@ const {
 } = require("../helpers/utils");
 
 module.exports = { scrapeChannels };
-
-const tempSpotifyApi = new SpotifyWebApi({
-	clientId: process.env.CLIENT_ID,
-	clientSecret: process.env.CLIENT_SECRET,
-	redirectUri: process.env.REDIRECT_URI,
-});
 
 async function scrapeChannels() {
 	try {
@@ -59,14 +53,14 @@ async function scrapeChannels() {
 				const userSession = activeSessionTokens[user._id];
 
 				// set refresh token
-				tempSpotifyApi.setRefreshToken(userSession.refreshToken);
+				spotifyApi.setRefreshToken(userSession.refreshToken);
 
 				// check if token is expired
 				if (checkTokenExpiration(userSession.tokenExpirationDate)) {
 					// get new access token and expiration timestamp
 					const {
 						body: { access_token, expires_in },
-					} = await tempSpotifyApi.refreshAccessToken();
+					} = await spotifyApi.refreshAccessToken();
 
 					// update userSession in local object
 					userSession.accessToken = access_token;
@@ -82,17 +76,14 @@ async function scrapeChannels() {
 				}
 
 				// set access token
-				tempSpotifyApi.setAccessToken(userSession.accessToken);
+				spotifyApi.setAccessToken(userSession.accessToken);
 
 				//get cleaned artist and song names
 				const [artistName, songName] = cleanVideoTitle(video.videoTitle);
 
-				// TODO cache as many requests as possible for user expansion
-				// right now, with just one user, there could be up to 20-40 api calls per loop
-
 				// I could cache this and just grab it after the first call
 				// this doesn't need to be fetched for every user, it just needs a uid for each user, meaning we fetch for the first loop iteration and grab from cache for the rest
-				const songs = await tempSpotifyApi.searchTracks(
+				const songs = await spotifyApi.searchTracks(
 					`track: ${songName} artist: ${artistName}`,
 					{ limit: 1 }
 				);
@@ -115,9 +106,7 @@ async function scrapeChannels() {
 					// this could be stored in a cache with key spotifyPlaylistId, value songUris
 					const {
 						body: { items },
-					} = await tempSpotifyApi.getPlaylistTracks(
-						user.spotifyPlaylistId
-					);
+					} = await spotifyApi.getPlaylistTracks(user.spotifyPlaylistId);
 
 					const songUris = items.map((trackObject) => {
 						return trackObject.track.uri;
@@ -132,7 +121,7 @@ async function scrapeChannels() {
 					) {
 						// add song to playlist
 						try {
-							await tempSpotifyApi.addTracksToPlaylist(
+							await spotifyApi.addTracksToPlaylist(
 								user.spotifyPlaylistId,
 								[song.uri]
 							);
@@ -147,3 +136,5 @@ async function scrapeChannels() {
 		throw err;
 	}
 }
+
+scrapeChannels();
