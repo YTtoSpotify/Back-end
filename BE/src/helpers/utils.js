@@ -123,6 +123,7 @@ function cleanVideoTitle(videoTitle) {
 		const cleanedTitle = string.replace(/\(([(Lyrics)\)]+)\)/g, "").trim();
 		return cleanedTitle;
 	});
+
 	return cleanedTitles;
 }
 

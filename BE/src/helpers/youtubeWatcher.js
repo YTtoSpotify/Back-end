@@ -11,7 +11,6 @@ const {
 	getLatestVideoFromXMLFeed,
 	checkTokenExpiration,
 	addSongToUserPlaylist,
-	cleanVideoTitle,
 } = require("../helpers/utils");
 
 module.exports = { scrapeChannels };
