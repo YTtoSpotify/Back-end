@@ -5,7 +5,6 @@ const connectDB = require("./db/connectDB");
 const authRouter = require("./routes/auth/authRoutes");
 const channelRouter = require("./routes/channels/channelRoutes");
 const userRouter = require("./routes/user/userRoutes");
-const hubRouter = require("./routes/youtubeHub/hubRoutes");
 
 const { handleError } = require("./helpers/errorHelpers");
 const xmlParser = require("express-xml-bodyparser");
@@ -32,7 +31,6 @@ app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
-app.use("/api/hub", hubRouter);
 //GLOBAL MIDDLEWARE
 app.use((err, req, res, next) => {
 	handleError(err, res);

@@ -10,6 +10,7 @@ const {
 	cleanVideoTitle,
 	getLatestVideoFromXMLFeed,
 	isSongInSpotifyPlaylist,
+	checkTokenExpiration,
 } = require("../helpers/utils");
 
 module.exports = { scrapeChannels };
@@ -60,22 +61,25 @@ async function scrapeChannels() {
 				// set refresh token
 				tempSpotifyApi.setRefreshToken(userSession.refreshToken);
 
-				// get new access token and expiration timestamp
-				const {
-					body: { access_token, expires_in },
-				} = await tempSpotifyApi.refreshAccessToken();
+				// check if token is expired
+				if (checkTokenExpiration(userSession.tokenExpirationDate)) {
+					// get new access token and expiration timestamp
+					const {
+						body: { access_token, expires_in },
+					} = await tempSpotifyApi.refreshAccessToken();
 
-				// update userSession in local object
-				userSession.accessToken = access_token;
-				userSession.tokenExpirationDate = new Date(
-					Date.now() + expires_in * 1000
-				);
+					// update userSession in local object
+					userSession.accessToken = access_token;
+					userSession.tokenExpirationDate = new Date(
+						Date.now() + expires_in * 1000
+					);
 
-				// update session in db
-				await refreshSessionAccessToken(userSession.sessionId, {
-					access_token,
-					expires_in,
-				});
+					// update session in db
+					await refreshSessionAccessToken(userSession.sessionId, {
+						access_token,
+						expires_in,
+					});
+				}
 
 				// set access token
 				tempSpotifyApi.setAccessToken(userSession.accessToken);
@@ -83,6 +87,11 @@ async function scrapeChannels() {
 				//get cleaned artist and song names
 				const [artistName, songName] = cleanVideoTitle(video.videoTitle);
 
+				// TODO cache as many requests as possible for user expansion
+				// right now, with just one user, there could be up to 20-40 api calls per loop
+
+				// I could cache this and just grab it after the first call
+				// this doesn't need to be fetched for every user, it just needs a uid for each user, meaning we fetch for the first loop iteration and grab from cache for the rest
 				const songs = await tempSpotifyApi.searchTracks(
 					`track: ${songName} artist: ${artistName}`,
 					{ limit: 1 }
@@ -91,6 +100,10 @@ async function scrapeChannels() {
 				const song = songs.body.tracks.items[0];
 
 				if (song) {
+					// cache = set with song uid's
+					// store in cache if not there already
+
+					// update only once
 					const songDBChannel = await Channel.findOneAndUpdate(
 						{ _id: video.channelId },
 						{ latestUploadId: video.videoId },
@@ -99,6 +112,7 @@ async function scrapeChannels() {
 						.lean()
 						.exec();
 
+					// this could be stored in a cache with key spotifyPlaylistId, value songUris
 					const {
 						body: { items },
 					} = await tempSpotifyApi.getPlaylistTracks(
@@ -133,5 +147,3 @@ async function scrapeChannels() {
 		throw err;
 	}
 }
-
-scrapeChannels();
