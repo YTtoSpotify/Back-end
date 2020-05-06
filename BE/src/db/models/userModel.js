@@ -8,7 +8,7 @@ const userSchema = mongoose.Schema({
 	spotifyId: String,
 	photo: String,
 	hasPlaylist: { type: Boolean, default: false },
-	spotifyPlaylistId: String,
+	spotifyPlaylistId: { type: String, index: true },
 	firstName: String,
 	lastName: String,
 });
