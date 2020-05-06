@@ -7,11 +7,13 @@ module.exports = {
 	cleanVideoTitle,
 	getLatestVideoFromXMLFeed,
 	isSongInSpotifyPlaylist,
+	addSongToUserPlaylist,
 };
 
 const convert = require("xml-js");
 
 const mongoose = require("mongoose");
+const Channel = require("../db/models/channelModel");
 
 const { ErrorHandler } = require("./errorHelpers");
 const spotifyApi = require("./spotifyWebApi");
@@ -118,7 +120,7 @@ function cleanVideoTitle(videoTitle) {
 	const noDashTitle = videoTitle.split("-");
 	// strip whitespace and remove all parentheses and their enclosed text
 	const cleanedTitles = noDashTitle.map((string, i) => {
-		const cleanedTitle = string.replace(/\(([^\)]+)\)/g, "").trim();
+		const cleanedTitle = string.replace(/\(([(Lyrics)\)]+)\)/g, "").trim();
 		return cleanedTitle;
 	});
 	return cleanedTitles;
@@ -150,5 +152,70 @@ function isSongInSpotifyPlaylist(playlistTrackUriArray, newTrackUri) {
 		return true;
 	} else {
 		return false;
+	}
+}
+
+async function addSongToUserPlaylist(user, video, cache) {
+	//get cleaned artist and song names
+	const [artistName, songName] = cleanVideoTitle(video.videoTitle);
+
+	// save key for cache item
+	const cacheKey = `${songName} - ${artistName}`;
+
+	let songUri = null;
+
+	try {
+		// if song not in cache
+		if (!cache.get(cacheKey)) {
+			const songQuery = `track: ${songName} artist: ${artistName}`;
+			// fetch song from spotify
+			const songs = await spotifyApi.searchTracks(songQuery, { limit: 1 });
+			// get song object
+			const spotifySong = songs.body.tracks.items[0];
+
+			if (spotifySong) {
+				// store in cache if spotify has the song
+				cache.set(cacheKey, spotifySong.uri);
+
+				songUri = spotifySong.uri;
+			}
+		} else {
+			// get song uri from cache
+			const cachedSongUri = cache.get(cacheKey);
+
+			songUri = cachedSongUri;
+		}
+
+		const songDBChannel = await Channel.findById(video.channelId)
+			.lean()
+			.exec();
+		// fetch songs in user playlist
+		const {
+			body: { items },
+		} = await spotifyApi.getPlaylistTracks(user.spotifyPlaylistId);
+
+		// get uris of all songs in user playlist
+		const songUris = items.map((trackObject) => {
+			return trackObject.track.uri;
+		});
+
+		// validate that song is not in playlist already and song is not the previous latest upload
+		// playlist check ensures if channels upload same song it is not added to the playlist twice
+		// latest upload check ensures that songs don't get added again after bi-weekly playlist wipe
+		if (
+			!isSongInSpotifyPlaylist(songUris, songUri) &&
+			!(songDBChannel.latestUploadId === video.videoId)
+		) {
+			// add song to playlist
+			try {
+				await spotifyApi.addTracksToPlaylist(user.spotifyPlaylistId, [
+					songUri,
+				]);
+			} catch (err) {
+				console.log(err);
+			}
+		}
+	} catch (err) {
+		throw err;
 	}
 }
