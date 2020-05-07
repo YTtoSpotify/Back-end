@@ -1,7 +1,8 @@
-require("dotenv").config();
+import { connection } from "mongoose";
 import express, { NextFunction, Request, Response } from "express";
-const cors = require("cors");
-const connectDB = require("./db/connectDB");
+import cors from "cors";
+import config from "./config";
+import connectDb from "./db/connectDB";
 const authRouter = require("./routes/auth/authRoutes");
 const channelRouter = require("./routes/channels/channelRoutes");
 const userRouter = require("./routes/user/userRoutes");
@@ -14,7 +15,8 @@ const { scrapeChannels } = require("./helpers/youtubeWatcher");
 const app = express();
 
 // mongoDB initial connection
-connectDB();
+connectDb();
+
 // Session connection with MongoDB database
 app.use(sessionInstance);
 
@@ -36,7 +38,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	handleError(err, res);
 });
 
-const port = process.env.PORT || 5000;
+const port = config.port || 5000;
 
 // run scraper at 10 PM, every day
 const now = new Date();
@@ -55,7 +57,6 @@ if (millisTill10 < 0) {
 	millisTill10 += 86400000;
 }
 
-console.log(millisTill10);
 setInterval(() => {
 	scrapeChannels();
 }, millisTill10);

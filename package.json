@@ -29,15 +29,18 @@
 		"passport": "^0.4.1",
 		"passport-spotify": "^1.1.0",
 		"spotify-web-api-node": "^4.0.0",
+		"ts-node": "^8.10.1",
 		"typescript": "^3.8.3",
 		"xml-js": "^1.6.11"
 	},
 	"devDependencies": {
-		"nodemon": "^2.0.3",
+		"@types/cors": "^2.8.6",
 		"@types/express": "^4.17.6",
 		"@types/express-session": "^1.17.0",
 		"@types/mongodb": "^3.5.16",
 		"@types/mongoose": "^5.7.15",
-		"@types/node": "^13.13.5"
+		"@types/node": "^13.13.5",
+		"concurrently": "^5.2.0",
+		"nodemon": "^2.0.3"
 	}
 }
