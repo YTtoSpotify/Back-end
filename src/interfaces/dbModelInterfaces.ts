@@ -1,7 +1,9 @@
 import { Document, Schema, Model, Types } from "mongoose";
 
 export interface IUserSchema extends Document {
-	subbedChannels: Types.Array<Schema.Types.ObjectId | IChannelSchema>;
+	subbedChannels:
+		| Types.Array<Schema.Types.ObjectId | IChannelSchema>
+		| number[];
 	recentlySavedSongUris: string[];
 	email: string;
 	displayName: string;
