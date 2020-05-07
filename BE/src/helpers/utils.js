@@ -8,13 +8,13 @@ module.exports = {
 	getLatestVideoFromXMLFeed,
 	isSongInSpotifyPlaylist,
 	addSongToUserPlaylist,
+	getLatestUploads,
 };
 
 const convert = require("xml-js");
 
 const mongoose = require("mongoose");
-const Channel = require("../db/models/channelModel");
-
+const axios = require("axios");
 const { ErrorHandler } = require("./errorHelpers");
 const spotifyApi = require("./spotifyWebApi");
 function isAuthenticated(req, res, next) {
@@ -172,6 +172,10 @@ function isSongInSpotifyPlaylist(playlistTrackUriArray, newTrackUri) {
 	}
 }
 
+function isSongInUserRecents(userRecentsList, songUri) {
+	return userRecentsList.includes(songUri);
+}
+
 async function addSongToUserPlaylist(user, video, cache) {
 	//get cleaned artist and song names
 	const cleanedTitle = cleanVideoTitle(video.videoTitle);
@@ -185,6 +189,7 @@ async function addSongToUserPlaylist(user, video, cache) {
 		// if song not in cache
 		if (!cache.get(cacheKey)) {
 			// fetch song from spotify
+
 			const songs = await spotifyApi.searchTracks(cleanedTitle, {
 				limit: 1,
 			});
@@ -206,9 +211,6 @@ async function addSongToUserPlaylist(user, video, cache) {
 			songUri = cachedSongUri;
 		}
 
-		const songDBChannel = await Channel.findById(video.channelId)
-			.lean()
-			.exec();
 		// fetch songs in user playlist
 		const {
 			body: { items },
@@ -221,12 +223,15 @@ async function addSongToUserPlaylist(user, video, cache) {
 
 		// validate that song is not in playlist already and song is not the previous latest upload
 		// playlist check ensures if channels upload same song it is not added to the playlist twice
-		// latest upload check ensures that songs don't get added again after bi-weekly playlist wipe
+
+		// TODO check user recentlySavedSongUris for video channel id
+
 		if (
 			!isSongInSpotifyPlaylist(songUris, songUri) &&
-			!(songDBChannel.latestUploadId === video.videoId)
+			!isSongInUserRecents(user.recentlySavedSongUris, songUri)
 		) {
 			// add song to playlist
+
 			try {
 				await spotifyApi.addTracksToPlaylist(user.spotifyPlaylistId, [
 					songUri,
@@ -235,6 +240,33 @@ async function addSongToUserPlaylist(user, video, cache) {
 				console.log(err);
 			}
 		}
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function getLatestUploads(channels) {
+	try {
+		// get xml data for each channel's latest video
+		const latestVideosData = await Promise.all(
+			await channels.map(async (channel) => {
+				// get feed xml from youtube channel xml feed
+				const page = await axios.get(
+					`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.ytId}`
+				);
+
+				// get title and id of most recent upload
+				const { videoTitle, videoId } = getLatestVideoFromXMLFeed(page);
+
+				return {
+					videoTitle,
+					videoId,
+					channelId: channel._id,
+				};
+			})
+		);
+
+		return latestVideosData;
 	} catch (err) {
 		throw err;
 	}
