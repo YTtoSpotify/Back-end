@@ -71,4 +71,4 @@ async function scrapeChannels() {
 	}
 }
 
-scrapeChannels();
+// scrapeChannels();

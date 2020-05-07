@@ -41,13 +41,21 @@ const port = process.env.PORT || 5000;
 // run scraper at 10 PM, every day
 const now = new Date();
 let millisTill10 =
-	new Date(now.getFullYear(), now.getMonth(), now.getDate(), 22, 0, 0, 0) -
-	now;
+	new Date(
+		now.getFullYear(),
+		now.getMonth(),
+		now.getDate(),
+		22,
+		0,
+		0,
+		0
+	).getTime() - now.getTime();
 if (millisTill10 < 0) {
 	// it's after 10pm, try 10pm tomorrow.
 	millisTill10 += 86400000;
 }
 
+console.log(millisTill10);
 setInterval(() => {
 	scrapeChannels();
 }, millisTill10);
