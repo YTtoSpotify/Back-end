@@ -14,4 +14,10 @@ export interface IUser extends Document {
 	lastName: string;
 }
 
-export interface IChannel extends Document {}
+export interface IChannel extends Document {
+	name: string;
+	img: string;
+	url: string;
+	ytId: string;
+	latestUploadId: string;
+}
