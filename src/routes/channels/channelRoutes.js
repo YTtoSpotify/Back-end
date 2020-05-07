@@ -1,8 +1,9 @@
 const router = require("express").Router();
-const {
+import {
 	getAvailableChannels,
 	getUserChannels,
-} = require("../../service/channelsService.js");
+} from "../../service/channelsService";
+
 const { isAuthenticated } = require("../../helpers/utils.js");
 const { handleError } = require("../../helpers/errorHelpers");
 
@@ -43,15 +44,6 @@ router.get("/userChannels", isAuthenticated, async (req, res) => {
 	}
 });
 
-// Either add a guard to this or remove it and just add items manually in DB
-// router.post("/new", async (req, res) => {
-// 	try {
-// 		await createChannel(req.body.channel);
-// 		return res.status(200).json({ message: "Channel created successfully." });
-// 	} catch (err) {
-// 		handleError(err, res);
-// 	}
-// });
 // Either add a guard to this or remove it and just add items manually in DB
 // router.delete("/delete/:channelId", async (req, res) => {
 // 	try {

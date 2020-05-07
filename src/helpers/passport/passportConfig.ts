@@ -18,7 +18,8 @@ interface ISpotifyUserProfile {
 }
 
 interface IUserSession {
-	_id: string;
+	_id?: string;
+	id: string;
 	accessToken: string;
 	refreshToken: string;
 	tokenExpirationDate: string;
@@ -37,12 +38,7 @@ passport.serializeUser((sessionData: IUserSession, done: Function) => {
 
 // this assigns req.user with whatever we pass through done
 passport.deserializeUser(async (sessionData: IUserSession, done: Function) => {
-	const {
-		_id: id,
-		accessToken,
-		refreshToken,
-		tokenExpirationDate,
-	} = sessionData;
+	const { id, accessToken, refreshToken, tokenExpirationDate } = sessionData;
 
 	const user = await User.findById(id).lean().exec();
 

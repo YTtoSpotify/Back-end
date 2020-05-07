@@ -1,18 +1,12 @@
-const Channel = require("../db/models/channelModel");
-module.exports = {
-	createChannel,
-	getAvailableChannels,
-	getUserChannels,
-	deleteChannel,
-};
-
-const {
+import { NewChannel } from "./../interfaces/dbModelInterfaces";
+import Channel from "../db/models/channelModel";
+import {
 	checkChannelExists,
 	handlePaginationData,
-} = require("../helpers/channelsServiceHelpers");
+} from "../helpers/channelsServiceHelpers";
 const { ErrorHandler } = require("../helpers/errorHelpers");
 
-async function createChannel(channel) {
+export async function createChannel(channel: NewChannel) {
 	try {
 		if (!channel) throw new ErrorHandler(400, "Missing new channel data");
 		await new Channel(channel).save();
@@ -21,15 +15,14 @@ async function createChannel(channel) {
 	}
 }
 
-async function getAvailableChannels(
+export async function getAvailableChannels(
 	page = 1,
 	nameFilter = "",
-	userChannelsArr
+	userChannelsIdArr: number[]
 ) {
 	try {
-		const userChannelIds = userChannelsArr.map((channel) => {
-			channel = channel.toString();
-			return channel;
+		const userChannelIds = userChannelsIdArr.map((channel) => {
+			return channel.toString();
 		});
 
 		const userChannelsSet = new Set(userChannelIds);
@@ -54,11 +47,15 @@ async function getAvailableChannels(
 	}
 }
 
-async function getUserChannels(page = 1, nameFilter = "", userChannelsArr) {
+export async function getUserChannels(
+	page = 1,
+	nameFilter = "",
+	userChannelsIdArr: number[]
+) {
 	try {
 		const paginationData = await handlePaginationData(
 			{
-				_id: { $in: [...userChannelsArr] },
+				_id: { $in: [...userChannelsIdArr] },
 				name: new RegExp(nameFilter, "i"),
 			},
 			page
@@ -74,7 +71,7 @@ async function getUserChannels(page = 1, nameFilter = "", userChannelsArr) {
 		throw err;
 	}
 }
-async function deleteChannel(channelId) {
+export async function deleteChannel(channelId: string) {
 	try {
 		await checkChannelExists(channelId);
 

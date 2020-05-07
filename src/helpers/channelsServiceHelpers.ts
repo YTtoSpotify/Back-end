@@ -1,9 +1,8 @@
-const Channel = require("../db/models/channelModel");
+import { IClientChannel } from "./../interfaces/clientInterfaces";
+import Channel from "../db/models/channelModel";
 const { ErrorHandler } = require("../helpers/errorHelpers");
 
-module.exports = { checkChannelExists, handlePaginationData };
-
-async function checkChannelExists(channelId) {
+export async function checkChannelExists(channelId: string) {
 	const idString = channelId.toString();
 
 	if (idString.length !== 12 && idString.length !== 24)
@@ -13,16 +12,16 @@ async function checkChannelExists(channelId) {
 		throw new ErrorHandler(404, "Channel not found");
 }
 
-async function handlePaginationData(filterObject, page) {
+export async function handlePaginationData(filterObject: object, page: number) {
 	const channelsPerPage = 8;
 
 	try {
-		let channels = await Channel.find(filterObject)
+		let channels = (await Channel.find(filterObject)
 			.skip(channelsPerPage * page - channelsPerPage)
 			.limit(channelsPerPage)
 			.sort("name")
 			.lean()
-			.exec();
+			.exec()) as IClientChannel[];
 
 		const numOfChannels = await Channel.countDocuments(filterObject);
 
