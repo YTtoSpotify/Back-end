@@ -1,5 +1,5 @@
 require("dotenv").config();
-const express = require("express");
+import express, { NextFunction, Request, Response } from "express";
 const cors = require("cors");
 const connectDB = require("./db/connectDB");
 const authRouter = require("./routes/auth/authRoutes");
@@ -32,7 +32,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
 //GLOBAL MIDDLEWARE
-app.use((err, req, res, next) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	handleError(err, res);
 });
 

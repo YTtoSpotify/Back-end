@@ -12,7 +12,7 @@ const {
 	checkTokenExpiration,
 	addSongToUserPlaylist,
 	getLatestUploads,
-} = require("../helpers/utils");
+} = require("./utils");
 
 module.exports = { scrapeChannels };
 
