@@ -1,40 +1,64 @@
 const passport = require("passport");
 const SpotifyStrategy = require("passport-spotify").Strategy;
-require("dotenv").config();
-const User = require("../../db/models/userModel");
-const spotifyApi = require("../spotifyWebApi");
 
-const clientID = process.env.CLIENT_ID;
-const clientSecret = process.env.CLIENT_SECRET;
-const callbackURL = process.env.REDIRECT_URI;
+import config from "../../config";
+import User from "../../db/models/userModel";
+const passportConfig = {
+	clientID: config.clientID,
+	clientSecret: config.clientSecret,
+	callbackURL: config.callbackURL,
+};
 
+interface ISpotifyUserProfile {
+	username: string;
+	id: string;
+	photos: string[];
+	emails: { value: string }[];
+	displayName: string;
+}
+
+interface IUserSession {
+	_id: string;
+	accessToken: string;
+	refreshToken: string;
+	tokenExpirationDate: string;
+}
 // this converts whatever is passed into 'done' into a bytestream(raw bit data), to be rebuilt by the deserialization function
 // also creates the sesssion with whatever we pass into done
-passport.serializeUser(
-	({ _id: id, accessToken, refreshToken, tokenExpirationDate }, done) => {
-		done(null, { id, accessToken, refreshToken, tokenExpirationDate });
-	}
-);
+passport.serializeUser((sessionData: IUserSession, done: Function) => {
+	const {
+		_id: id,
+		accessToken,
+		refreshToken,
+		tokenExpirationDate,
+	} = sessionData;
+	done(null, { id, accessToken, refreshToken, tokenExpirationDate });
+});
 
 // this assigns req.user with whatever we pass through done
-passport.deserializeUser(
-	async ({ id, accessToken, refreshToken, tokenExpirationDate }, done) => {
-		const user = await User.findById(id).lean().exec();
+passport.deserializeUser(async (sessionData: IUserSession, done: Function) => {
+	const {
+		_id: id,
+		accessToken,
+		refreshToken,
+		tokenExpirationDate,
+	} = sessionData;
 
-		done(null, { ...user, accessToken, refreshToken, tokenExpirationDate });
-	}
-);
+	const user = await User.findById(id).lean().exec();
 
-const config = {
-	clientID,
-	clientSecret,
-	callbackURL,
-};
+	done(null, { ...user, accessToken, refreshToken, tokenExpirationDate });
+});
 
 passport.use(
 	new SpotifyStrategy(
-		config,
-		async (accessToken, refreshToken, expiresIn, profile, done) => {
+		passportConfig,
+		async (
+			accessToken: string,
+			refreshToken: string,
+			expiresIn: number,
+			profile: ISpotifyUserProfile,
+			done: Function
+		) => {
 			// grab data from profile for DB users
 			const {
 				username,

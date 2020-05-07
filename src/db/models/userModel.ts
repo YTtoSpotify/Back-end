@@ -1,6 +1,5 @@
+import { IUserModel, IUserSchema } from "./../../interfaces/dbModelInterfaces";
 import { Schema, model } from "mongoose";
-import { IUser } from "../../interfaces/dbModelInterfaces";
-
 const userSchema: Schema = new Schema({
 	subbedChannels: [{ type: [Schema.Types.ObjectId], ref: "Channel" }],
 	email: { type: String, unique: true },
@@ -15,6 +14,6 @@ const userSchema: Schema = new Schema({
 	lastName: String,
 });
 
-const User = model<IUser>("User", userSchema);
+const User = model<IUserSchema, IUserModel>("User", userSchema);
 
 export default User;

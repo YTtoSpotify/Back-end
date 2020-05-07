@@ -1,4 +1,7 @@
-import { IChannel } from "./../../interfaces/dbModelInterfaces";
+import {
+	IChannelSchema,
+	IChannelModel,
+} from "./../../interfaces/dbModelInterfaces";
 import { Schema, model } from "mongoose";
 
 const channelSchema = new Schema({
@@ -9,6 +12,6 @@ const channelSchema = new Schema({
 	latestUploadId: { type: String, default: "" },
 });
 
-const Channel = model<IChannel>("Channel", channelSchema);
+const Channel = model<IChannelSchema, IChannelModel>("Channel", channelSchema);
 
 export default Channel;

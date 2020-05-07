@@ -1,7 +1,7 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Model, Types } from "mongoose";
 
-export interface IUser extends Document {
-	subbedChannels: Schema.Types.ObjectId[] | IChannel[];
+export interface IUserSchema extends Document {
+	subbedChannels: Types.Array<Schema.Types.ObjectId> | IChannelSchema;
 	recentlySavedSongUris: string[];
 	email: string;
 	displayName: string;
@@ -14,10 +14,14 @@ export interface IUser extends Document {
 	lastName: string;
 }
 
-export interface IChannel extends Document {
+export interface IUserModel extends Model<IUserSchema> {}
+
+export interface IChannelSchema extends Document {
 	name: string;
 	img: string;
 	url: string;
 	ytId: string;
 	latestUploadId: string;
 }
+
+export interface IChannelModel extends Model<IChannelSchema> {}
