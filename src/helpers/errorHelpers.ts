@@ -1,12 +1,12 @@
-class ErrorHandler extends Error {
-	constructor(statusCode, message) {
+import { Response } from "express";
+
+export class ErrorHandler extends Error {
+	constructor(public statusCode: number) {
 		super();
-		this.statusCode = statusCode;
-		this.message = message;
 	}
 }
 
-const handleError = (err, res) => {
+export const handleError = (err: ErrorHandler, res: Response) => {
 	let statusCode = err.statusCode;
 	let message = err.message;
 
@@ -23,5 +23,3 @@ const handleError = (err, res) => {
 
 	throw err;
 };
-
-module.exports = { ErrorHandler, handleError };
