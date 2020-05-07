@@ -9,6 +9,7 @@ const userSchema = mongoose.Schema({
 	photo: String,
 	hasPlaylist: { type: Boolean, default: false },
 	spotifyPlaylistId: { type: String, index: true },
+	recentlySavedSongUris: [mongoose.Schema.Types.String],
 	firstName: String,
 	lastName: String,
 });
