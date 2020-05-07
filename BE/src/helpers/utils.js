@@ -12,7 +12,7 @@ module.exports = {
 };
 
 const convert = require("xml-js");
-
+const User = require("../db/models/userModel");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const { ErrorHandler } = require("./errorHelpers");
@@ -224,8 +224,6 @@ async function addSongToUserPlaylist(user, video, cache) {
 		// validate that song is not in playlist already and song is not the previous latest upload
 		// playlist check ensures if channels upload same song it is not added to the playlist twice
 
-		// TODO check user recentlySavedSongUris for video channel id
-
 		if (
 			!isSongInSpotifyPlaylist(songUris, songUri) &&
 			!isSongInUserRecents(user.recentlySavedSongUris, songUri)
@@ -236,6 +234,7 @@ async function addSongToUserPlaylist(user, video, cache) {
 				await spotifyApi.addTracksToPlaylist(user.spotifyPlaylistId, [
 					songUri,
 				]);
+				// TODO save song to user recents
 			} catch (err) {
 				console.log(err);
 			}

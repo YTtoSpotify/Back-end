@@ -31,9 +31,7 @@ async function scrapeChannels() {
 			// fetch all users subbed to channel that uploaded video
 			const users = await User.find({
 				subbedChannels: video.channelId,
-			})
-				.lean()
-				.exec();
+			});
 
 			for (const user of users) {
 				// get session associated with user
