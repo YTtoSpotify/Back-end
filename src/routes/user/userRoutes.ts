@@ -67,6 +67,7 @@ router.delete(
 	"/deleteChannel/:channelId",
 	isAuthenticated,
 	async (req: AuthenticatedRequest, res: Response) => {
+		console.log("testing delete channel");
 		try {
 			const userId = req.user._id;
 			const channelId = req.params.channelId;
