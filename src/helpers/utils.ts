@@ -30,26 +30,26 @@ export async function handleSpotifyApiTokens(
 	next: NextFunction
 ) {
 	try {
+		// TODO check token flow, something is getting out of sync with this and refreshSessionAccessToken
 		const { accessToken, refreshToken, tokenExpirationDate } = req.user;
 
+		console.log(new Date(tokenExpirationDate).toLocaleTimeString());
 		if (!spotifyApi.getAccessToken()) spotifyApi.setAccessToken(accessToken);
 
 		if (!spotifyApi.getRefreshToken())
 			spotifyApi.setRefreshToken(refreshToken);
 
 		if (isTokenExpired(tokenExpirationDate)) {
-			console.log("refreshing token");
 			const {
 				body: { access_token, expires_in },
 			} = await spotifyApi.refreshAccessToken();
 
 			spotifyApi.setAccessToken(access_token);
 
-			// change session access token
-			req.session!.passport.user.accessToken = access_token;
-			// change session expiration date
-			const newExpirationDate = new Date(Date.now() + expires_in * 1000);
-			req.session!.passport.user.tokenExpirationDate = newExpirationDate;
+			await refreshSessionAccessToken(req.session!.id, {
+				access_token,
+				expires_in,
+			});
 		}
 		next();
 	} catch (err) {
@@ -61,7 +61,7 @@ export async function handleSpotifyApiTokens(
 export function isTokenExpired(tokenExpirationDate: string): boolean {
 	const expirationDate = new Date(tokenExpirationDate);
 	let isExpired = false;
-	console.log(expirationDate.getTime() - Date.now());
+
 	if (expirationDate.getTime() - Date.now() <= 0) {
 		isExpired = true;
 	}
@@ -258,10 +258,10 @@ export async function addSongToUserPlaylist(
 
 		// validate that song is not in playlist already and song is not the previous latest upload
 		// playlist check ensures if channels upload same song it is not added to the playlist twice
-
 		if (
 			!isSongInSpotifyPlaylist(songUris, songUri) &&
-			!isSongInUserRecents(user.recentlySavedSongUris, songUri)
+			!isSongInUserRecents(user.recentlySavedSongUris, songUri) &&
+			songUri
 		) {
 			// add song to playlist
 

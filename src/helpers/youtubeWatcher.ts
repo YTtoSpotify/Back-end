@@ -30,6 +30,7 @@ export default async function scrapeChannels() {
 			// fetch all users subbed to channel that uploaded video
 			const users = await User.find({
 				subbedChannels: video.channelId,
+				hasPlaylist: true,
 			});
 
 			for (const user of users) {
