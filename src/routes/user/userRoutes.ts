@@ -53,6 +53,7 @@ router.post(
 	[isAuthenticated, handleSpotifyApiTokens],
 	async (req: AuthenticatedRequest, res: Response) => {
 		try {
+			console.log("hit route");
 			await createSpotifyPlaylist(req.user.spotifyId, req.user._id);
 
 			return res.status(200).json({ message: "Spotify playlist created!" });

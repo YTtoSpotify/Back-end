@@ -53,8 +53,8 @@ export async function createSpotifyPlaylist(
 ) {
 	try {
 		await checkUserExists(userDbId);
+		console.log("hit createSpotifyPlaylist");
 
-		console.log(userSpotifyId, userDbId);
 		// hit spotify api to create new playlist
 		const newPlaylistData = await spotifyApi.createPlaylist(
 			userSpotifyId,

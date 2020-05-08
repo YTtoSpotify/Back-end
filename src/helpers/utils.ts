@@ -37,6 +37,7 @@ export async function handleSpotifyApiTokens(
 		if (!spotifyApi.getRefreshToken())
 			spotifyApi.setRefreshToken(refreshToken);
 
+		console.log("hit middleware");
 		if (isTokenExpired(tokenExpirationDate)) {
 			const {
 				body: { access_token, expires_in },
@@ -60,7 +61,6 @@ export async function handleSpotifyApiTokens(
 export function isTokenExpired(tokenExpirationDate: string): boolean {
 	const expirationDate = new Date(tokenExpirationDate);
 	let isExpired = false;
-	console.log(expirationDate.getTime() - Date.now());
 	if (expirationDate.getTime() - Date.now() <= 0) {
 		isExpired = true;
 	}
