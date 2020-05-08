@@ -1,9 +1,7 @@
-const User = require("../db/models/userModel");
+import User from "../db/models/userModel";
 const { ErrorHandler } = require("./errorHelpers");
 
-module.exports = { checkUserExists };
-
-async function checkUserExists(userId) {
+export async function checkUserExists(userId: number) {
 	const idString = userId.toString();
 
 	if (idString.length !== 12 && idString.length !== 24)
