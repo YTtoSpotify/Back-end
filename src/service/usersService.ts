@@ -29,6 +29,7 @@ export async function getUser(userId: number) {
 		return user;
 	} catch (err) {
 		throw err;
+		tokenExpirationDate;
 	}
 }
 export async function removeChannelFromUser(channelId: string, userId: number) {
@@ -66,10 +67,10 @@ export async function createSpotifyPlaylist(
 		);
 
 		// update user with new spotify playlist data
-		// await User.updateOne(
-		// 	{ _id: userDbId },
-		// 	{ hasPlaylist: true, spotifyPlaylistId: newPlaylistData.body.id }
-		// );
+		await User.updateOne(
+			{ _id: userDbId },
+			{ hasPlaylist: true, spotifyPlaylistId: newPlaylistData.body.id }
+		);
 	} catch (err) {
 		throw err;
 	}

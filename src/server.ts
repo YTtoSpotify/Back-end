@@ -58,7 +58,6 @@ if (millisTill10 < 0) {
 	millisTill10 += 86400000;
 }
 
-// scrapeChannels();
 setInterval(() => {
 	try {
 		scrapeChannels();
