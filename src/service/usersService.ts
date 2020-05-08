@@ -29,7 +29,6 @@ export async function getUser(userId: number) {
 		return user;
 	} catch (err) {
 		throw err;
-		tokenExpirationDate;
 	}
 }
 export async function removeChannelFromUser(channelId: string, userId: number) {
