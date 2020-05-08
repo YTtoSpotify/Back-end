@@ -8,8 +8,12 @@ export async function checkChannelExists(channelId: string) {
 	if (idString.length !== 12 && idString.length !== 24)
 		throw new ErrorHandler(400, "Invalid channel id.");
 
-	if (!(await Channel.exists({ _id: idString })))
-		throw new ErrorHandler(404, "Channel not found");
+	try {
+		if (!(await Channel.exists({ _id: idString })))
+			throw new ErrorHandler(404, "Channel not found");
+	} catch (err) {
+		throw err;
+	}
 }
 
 export async function handlePaginationData(filterObject: object, page: number) {

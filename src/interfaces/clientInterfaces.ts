@@ -7,5 +7,5 @@ export interface IClientUser extends IUserSchema {
 	subbedChannels: number[];
 	accessToken: string;
 	refreshToken: string;
-	tokenExpirationDate: Date;
+	tokenExpirationDate: string;
 }

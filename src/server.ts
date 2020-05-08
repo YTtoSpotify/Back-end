@@ -58,8 +58,13 @@ if (millisTill10 < 0) {
 	millisTill10 += 86400000;
 }
 
+// scrapeChannels();
 setInterval(() => {
-	scrapeChannels();
+	try {
+		scrapeChannels();
+	} catch (err) {
+		throw err;
+	}
 }, millisTill10);
 
 app.get("/", (req, res) => {

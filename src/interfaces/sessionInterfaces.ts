@@ -10,7 +10,7 @@ export interface IParsedDbSession {
 			id: string;
 			accessToken: string;
 			refreshToken: string;
-			tokenExpirationDate: Date;
+			tokenExpirationDate: string | Date;
 		};
 	};
 }

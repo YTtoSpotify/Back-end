@@ -1,4 +1,3 @@
-import { IClientUser } from "./../interfaces/clientInterfaces";
 import { IChannelSchema, IUserSchema } from "./../interfaces/dbModelInterfaces";
 import {
 	IDbSession,
@@ -38,7 +37,7 @@ export async function handleSpotifyApiTokens(
 		if (!spotifyApi.getRefreshToken())
 			spotifyApi.setRefreshToken(refreshToken);
 
-		if (checkTokenExpiration(tokenExpirationDate)) {
+		if (isTokenExpired(tokenExpirationDate)) {
 			const {
 				body: { access_token, expires_in },
 			} = await spotifyApi.refreshAccessToken();
@@ -58,10 +57,10 @@ export async function handleSpotifyApiTokens(
 	}
 }
 
-export function checkTokenExpiration(tokenExpirationDate: Date): boolean {
+export function isTokenExpired(tokenExpirationDate: string): boolean {
 	const expirationDate = new Date(tokenExpirationDate);
-
 	let isExpired = false;
+	console.log(expirationDate.getTime() - Date.now());
 	if (expirationDate.getTime() - Date.now() <= 0) {
 		isExpired = true;
 	}
@@ -116,7 +115,7 @@ export async function fetchActiveSessions() {
 				id: string;
 				accessToken: string;
 				refreshToken: string;
-				tokenExpirationDate: Date;
+				tokenExpirationDate: string;
 			};
 		} = {};
 
@@ -265,14 +264,10 @@ export async function addSongToUserPlaylist(
 		) {
 			// add song to playlist
 
-			try {
-				await spotifyApi.addTracksToPlaylist(user.spotifyPlaylistId, [
-					songUri,
-				]);
-				// TODO save song to user recents
-			} catch (err) {
-				console.log(err);
-			}
+			await spotifyApi.addTracksToPlaylist(user.spotifyPlaylistId, [
+				songUri,
+			]);
+			addSongUriToRecents(songUri, user);
 		}
 	} catch (err) {
 		throw err;
@@ -303,6 +298,20 @@ export async function getLatestUploads(
 		);
 
 		return latestVideosData;
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function addSongUriToRecents(songUri: string, user: IUserSchema) {
+	try {
+		const recentSongSet = new Set(user.recentlySavedSongUris);
+
+		if (!recentSongSet.has(songUri)) {
+			user.recentlySavedSongUris.push(songUri);
+		}
+
+		user.save();
 	} catch (err) {
 		throw err;
 	}

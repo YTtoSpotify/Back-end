@@ -7,7 +7,7 @@ import NodeCache from "node-cache";
 import {
 	refreshSessionAccessToken,
 	fetchActiveSessions,
-	checkTokenExpiration,
+	isTokenExpired,
 	addSongToUserPlaylist,
 	getLatestUploads,
 } from "./utils";
@@ -39,7 +39,7 @@ export default async function scrapeChannels() {
 				spotifyApi.setRefreshToken(userSession.refreshToken);
 
 				// check if token is expired
-				if (checkTokenExpiration(userSession.tokenExpirationDate)) {
+				if (isTokenExpired(userSession.tokenExpirationDate)) {
 					// get new access token and expiration timestamp
 					const {
 						body: { access_token, expires_in },
@@ -49,7 +49,7 @@ export default async function scrapeChannels() {
 					userSession.accessToken = access_token;
 					userSession.tokenExpirationDate = new Date(
 						Date.now() + expires_in * 1000
-					);
+					).toString();
 
 					// update session in db
 					await refreshSessionAccessToken(userSession.sessionId, {
@@ -66,8 +66,7 @@ export default async function scrapeChannels() {
 			}
 		}
 	} catch (err) {
+		console.log(err);
 		throw err;
 	}
 }
-
-// scrapeChannels();

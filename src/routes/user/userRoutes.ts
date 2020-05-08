@@ -2,7 +2,11 @@ import { AuthenticatedRequest } from "./../../interfaces/passportInterfaces";
 import { Response } from "express";
 const router = require("express").Router();
 
-import { isAuthenticated, handleSpotifyApiTokens } from "../../helpers/utils";
+import {
+	isAuthenticated,
+	handleSpotifyApiTokens,
+	isTokenExpired,
+} from "../../helpers/utils";
 import { handleError } from "../../helpers/errorHelpers";
 import {
 	getUser,
@@ -48,13 +52,8 @@ router.post(
 	"/createSpotifyPlaylist",
 	[isAuthenticated, handleSpotifyApiTokens],
 	async (req: AuthenticatedRequest, res: Response) => {
-		const playlistName = req.body.playlistName;
 		try {
-			await createSpotifyPlaylist(
-				playlistName,
-				req.user.spotifyId,
-				req.user._id
-			);
+			await createSpotifyPlaylist(req.user.spotifyId, req.user._id);
 
 			return res.status(200).json({ message: "Spotify playlist created!" });
 		} catch (err) {
