@@ -1,15 +1,9 @@
-const User = require("../db/models/userModel");
-const { checkChannelExists } = require("../helpers/channelsServiceHelpers");
-const spotifyApi = require("../helpers/spotifyWebApi");
-const { checkUserExists } = require("../helpers/usersServiceHelpers");
-module.exports = {
-	addChannelToUser,
-	removeChannelFromUser,
-	getUser,
-	createSpotifyPlaylist,
-};
+import User from "../db/models/userModel";
+import { checkChannelExists } from "../helpers/channelsServiceHelpers";
+import spotifyApi from "../helpers/spotifyWebApi";
+import { checkUserExists } from "../helpers/usersServiceHelpers";
 
-async function addChannelToUser(channelId, userId) {
+export async function addChannelToUser(channelId: string, userId: number) {
 	try {
 		await checkUserExists(userId);
 
@@ -24,7 +18,7 @@ async function addChannelToUser(channelId, userId) {
 	}
 }
 
-async function getUser(userId) {
+export async function getUser(userId: number) {
 	try {
 		await checkUserExists(userId);
 
@@ -37,7 +31,7 @@ async function getUser(userId) {
 		throw err;
 	}
 }
-async function removeChannelFromUser(channelId, userId) {
+export async function removeChannelFromUser(channelId: string, userId: number) {
 	try {
 		await checkUserExists(userId);
 
@@ -45,6 +39,7 @@ async function removeChannelFromUser(channelId, userId) {
 
 		await User.update(
 			{ _id: userId },
+			// @ts-ignore
 			{ $pull: { subbedChannels: channelId } }
 		);
 	} catch (err) {
@@ -52,7 +47,11 @@ async function removeChannelFromUser(channelId, userId) {
 	}
 }
 
-async function createSpotifyPlaylist(playlistName, userSpotifyId, userDbId) {
+export async function createSpotifyPlaylist(
+	playlistName: string,
+	userSpotifyId: string,
+	userDbId: number
+) {
 	try {
 		await checkUserExists(userDbId);
 

@@ -1,26 +1,25 @@
-const axios = require("axios");
-const Channel = require("../db/models/channelModel");
-const User = require("../db/models/userModel");
-const spotifyApi = require("./spotifyWebApi");
-require("dotenv").config();
-const NodeCache = require("node-cache");
+import { IChannelSchema } from "./../interfaces/dbModelInterfaces";
+import Channel from "../db/models/channelModel";
+import User from "../db/models/userModel";
+import spotifyApi from "./spotifyWebApi";
+import NodeCache from "node-cache";
 
-const {
+import {
 	refreshSessionAccessToken,
 	fetchActiveSessions,
-	getLatestVideoFromXMLFeed,
 	checkTokenExpiration,
 	addSongToUserPlaylist,
 	getLatestUploads,
-} = require("./utils");
+} from "./utils";
 
-module.exports = { scrapeChannels };
-
-async function scrapeChannels() {
+export default async function scrapeChannels() {
 	try {
 		const songCache = new NodeCache();
 		// fetch all channels
-		const channels = await Channel.find().sort({ name: "asc" }).lean().exec();
+		const channels = (await Channel.find()
+			.sort({ name: "asc" })
+			.lean()
+			.exec()) as IChannelSchema[];
 
 		// fetch active sessions objects
 		const activeSessionTokens = await fetchActiveSessions();

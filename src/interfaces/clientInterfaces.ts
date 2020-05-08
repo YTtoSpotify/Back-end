@@ -5,4 +5,7 @@ export interface IClientChannel extends IChannelSchema {
 
 export interface IClientUser extends IUserSchema {
 	subbedChannels: number[];
+	accessToken: string;
+	refreshToken: string;
+	tokenExpirationDate: Date;
 }

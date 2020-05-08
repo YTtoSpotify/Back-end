@@ -2,15 +2,15 @@ import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import config from "./config";
 import connectDb from "./db/connectDB";
-const authRouter = require("./routes/auth/authRoutes");
-const channelRouter = require("./routes/channels/channelRoutes");
-const userRouter = require("./routes/user/userRoutes");
+import authRouter from "./routes/auth/authRoutes";
+import channelRouter from "./routes/channels/channelRoutes";
+import userRouter from "./routes/user/userRoutes";
 
-const { handleError } = require("./helpers/errorHelpers");
-const xmlParser = require("express-xml-bodyparser");
-const sessionInstance = require("./helpers/sessionCreate");
-const passport = require("./helpers/passport/passportConfig");
-const { scrapeChannels } = require("./helpers/youtubeWatcher");
+import { handleError, ErrorHandler } from "./helpers/errorHelpers";
+import xmlParser from "express-xml-bodyparser";
+import sessionInstance from "./helpers/sessionCreate";
+import scrapeChannels from "./helpers/youtubeWatcher";
+import passport from "./helpers/passport/passportConfig";
 const app = express();
 
 // mongoDB initial connection
@@ -33,9 +33,11 @@ app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
 //GLOBAL MIDDLEWARE
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-	handleError(err, res);
-});
+app.use(
+	(err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
+		handleError(err, res);
+	}
+);
 
 const port = config.port || 5000;
 

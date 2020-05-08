@@ -1,6 +1,6 @@
 import { IClientChannel } from "./../interfaces/clientInterfaces";
 import Channel from "../db/models/channelModel";
-const { ErrorHandler } = require("../helpers/errorHelpers");
+import { ErrorHandler } from "../helpers/errorHelpers";
 
 export async function checkChannelExists(channelId: string) {
 	const idString = channelId.toString();

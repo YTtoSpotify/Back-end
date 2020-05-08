@@ -1,10 +1,10 @@
+import { ErrorHandler } from "./../helpers/errorHelpers";
 import { NewChannel } from "./../interfaces/dbModelInterfaces";
 import Channel from "../db/models/channelModel";
 import {
 	checkChannelExists,
 	handlePaginationData,
 } from "../helpers/channelsServiceHelpers";
-const { ErrorHandler } = require("../helpers/errorHelpers");
 
 export async function createChannel(channel: NewChannel) {
 	try {

@@ -1,34 +1,40 @@
-module.exports = {
-	isAuthenticated,
-	handleSpotifyApiTokens,
-	checkTokenExpiration,
-	refreshSessionAccessToken,
-	fetchActiveSessions,
-	cleanVideoTitle,
-	getLatestVideoFromXMLFeed,
-	isSongInSpotifyPlaylist,
-	addSongToUserPlaylist,
-	getLatestUploads,
-};
+import { IClientUser } from "./../interfaces/clientInterfaces";
+import { IChannelSchema, IUserSchema } from "./../interfaces/dbModelInterfaces";
+import {
+	IDbSession,
+	IParsedDbSession,
+} from "./../interfaces/sessionInterfaces";
+import { NextFunction } from "express";
+import { AuthenticatedRequest } from "./../interfaces/passportInterfaces";
 
-const convert = require("xml-js");
-const User = require("../db/models/userModel");
-const mongoose = require("mongoose");
-const axios = require("axios");
-const { ErrorHandler } = require("./errorHelpers");
-const spotifyApi = require("./spotifyWebApi");
-function isAuthenticated(req, res, next) {
+import convert from "xml-js";
+import axios, { AxiosResponse } from "axios";
+import { ErrorHandler } from "./errorHelpers";
+import spotifyApi from "./spotifyWebApi";
+import mongoose from "mongoose";
+import NodeCache from "node-cache";
+
+export function isAuthenticated(
+	req: AuthenticatedRequest,
+	res: Response,
+	next: NextFunction
+) {
 	if (req.isAuthenticated()) next();
 	else {
 		throw new ErrorHandler(403, "User not logged in");
 	}
 }
 
-async function handleSpotifyApiTokens(req, res, next) {
+export async function handleSpotifyApiTokens(
+	req: AuthenticatedRequest,
+	res: Response,
+	next: NextFunction
+) {
 	try {
 		const { accessToken, refreshToken, tokenExpirationDate } = req.user;
 
 		if (!spotifyApi.getAccessToken()) spotifyApi.setAccessToken(accessToken);
+
 		if (!spotifyApi.getRefreshToken())
 			spotifyApi.setRefreshToken(refreshToken);
 
@@ -40,10 +46,10 @@ async function handleSpotifyApiTokens(req, res, next) {
 			spotifyApi.setAccessToken(access_token);
 
 			// change session access token
-			req.session.passport.user.accessToken = access_token;
+			req.session!.passport.user.accessToken = access_token;
 			// change session expiration date
 			const newExpirationDate = new Date(Date.now() + expires_in * 1000);
-			req.session.passport.user.tokenExpirationDate = newExpirationDate;
+			req.session!.passport.user.tokenExpirationDate = newExpirationDate;
 		}
 		next();
 	} catch (err) {
@@ -52,7 +58,7 @@ async function handleSpotifyApiTokens(req, res, next) {
 	}
 }
 
-function checkTokenExpiration(tokenExpirationDate) {
+export function checkTokenExpiration(tokenExpirationDate: Date): boolean {
 	const expirationDate = new Date(tokenExpirationDate);
 
 	let isExpired = false;
@@ -63,16 +69,21 @@ function checkTokenExpiration(tokenExpirationDate) {
 	return isExpired;
 }
 
-async function refreshSessionAccessToken(sessionId, tokenData) {
+export async function refreshSessionAccessToken(
+	sessionId: string,
+	tokenData: {
+		access_token: string;
+		expires_in: number;
+	}
+) {
 	try {
 		// find session
-		const session = await mongoose.connection
+		const session: IDbSession = (await mongoose.connection
 			.collection("sessions")
-			.find({ _id: sessionId })
-			.toArray();
+			.findOne({ _id: sessionId })) as IDbSession;
 
 		// parse json for easier manipulation
-		const sessionData = JSON.parse(session[0].session);
+		const sessionData: IParsedDbSession = JSON.parse(session.session);
 		sessionData.passport.user.accessToken = tokenData.access_token;
 		sessionData.passport.user.tokenExpirationDate = new Date(
 			Date.now() + tokenData.expires_in * 1000
@@ -90,7 +101,7 @@ async function refreshSessionAccessToken(sessionId, tokenData) {
 	}
 }
 
-async function fetchActiveSessions() {
+export async function fetchActiveSessions() {
 	try {
 		// fetch all active sessions
 		const activeSessionDocsCursor = await mongoose.connection
@@ -98,9 +109,16 @@ async function fetchActiveSessions() {
 			.find({});
 
 		// convert to array
-		const activeSessionsArray = await activeSessionDocsCursor.toArray();
-
-		const activeSessionsDict = {};
+		const activeSessionsArray = (await activeSessionDocsCursor.toArray()) as IDbSession[];
+		const activeSessionsDict: {
+			[key: string]: {
+				sessionId: string;
+				id: string;
+				accessToken: string;
+				refreshToken: string;
+				tokenExpirationDate: Date;
+			};
+		} = {};
 
 		activeSessionsArray.forEach(({ _id: sessionId, session }) => {
 			const {
@@ -115,7 +133,7 @@ async function fetchActiveSessions() {
 	}
 }
 
-function cleanVideoTitle(videoTitle) {
+export function cleanVideoTitle(videoTitle: string): string {
 	// all values to remove
 	const stringsToRemove = new Set([
 		"\\(",
@@ -143,24 +161,34 @@ function cleanVideoTitle(videoTitle) {
 	return cleanedTitleString;
 }
 
-function getLatestVideoFromXMLFeed(channelXMLFeed) {
+export function getLatestVideoFromXMLFeed(
+	channelXMLFeed: AxiosResponse
+): { videoTitle: string; videoId: string } {
 	// convert xml to js object
-	const allXMLElements = convert.xml2js(channelXMLFeed.data).elements[0]
-		.elements;
+	const allXMLElements: convert.Element[] = convert.xml2js(channelXMLFeed.data)
+		.elements[0].elements;
 
 	// grab latest video uploaded from xml
-	const latestVideo = allXMLElements.find((el) => {
+	const latestVideo = allXMLElements.find((el: convert.Element) => {
 		return el.name === "entry" && el.elements && el.elements.length === 9;
 	});
 
 	// destructure video id and title from nested elements in xml
+	// @ts-ignore
 	const { text: videoId } = latestVideo.elements[1].elements[0];
+	// @ts-ignore
 	const { text: videoTitle } = latestVideo.elements[3].elements[0];
 
-	return { videoTitle, videoId };
+	return {
+		videoTitle: videoTitle as string,
+		videoId: videoId as string,
+	};
 }
 
-function isSongInSpotifyPlaylist(playlistTrackUriArray, newTrackUri) {
+export function isSongInSpotifyPlaylist(
+	playlistTrackUriArray: string[],
+	newTrackUri: string
+) {
 	// make set of track uids for O(1) checks
 	const trackIdSet = new Set(playlistTrackUriArray);
 
@@ -172,18 +200,25 @@ function isSongInSpotifyPlaylist(playlistTrackUriArray, newTrackUri) {
 	}
 }
 
-function isSongInUserRecents(userRecentsList, songUri) {
+export function isSongInUserRecents(
+	userRecentsList: string[],
+	songUri: string
+) {
 	return userRecentsList.includes(songUri);
 }
 
-async function addSongToUserPlaylist(user, video, cache) {
+export async function addSongToUserPlaylist(
+	user: IUserSchema,
+	video: { videoTitle: string; videoId: string; channelId: string },
+	cache: NodeCache
+) {
 	//get cleaned artist and song names
 	const cleanedTitle = cleanVideoTitle(video.videoTitle);
 
 	// save key for cache item
 	const cacheKey = cleanedTitle;
 
-	let songUri = null;
+	let songUri: string = "";
 
 	try {
 		// if song not in cache
@@ -194,7 +229,7 @@ async function addSongToUserPlaylist(user, video, cache) {
 				limit: 1,
 			});
 			// get song object
-			const spotifySong = songs.body.tracks.items[0];
+			const spotifySong = songs!.body!.tracks!.items[0] || undefined;
 
 			if (!spotifySong)
 				console.log(`************** Could not find song ${cleanedTitle}`);
@@ -206,7 +241,7 @@ async function addSongToUserPlaylist(user, video, cache) {
 			}
 		} else {
 			// get song uri from cache
-			const cachedSongUri = cache.get(cacheKey);
+			const cachedSongUri: string = cache.get(cacheKey) as string;
 
 			songUri = cachedSongUri;
 		}
@@ -244,7 +279,9 @@ async function addSongToUserPlaylist(user, video, cache) {
 	}
 }
 
-async function getLatestUploads(channels) {
+export async function getLatestUploads(
+	channels: IChannelSchema[]
+): Promise<{ videoTitle: string; videoId: string; channelId: string }[]> {
 	try {
 		// get xml data for each channel's latest video
 		const latestVideosData = await Promise.all(

@@ -4,17 +4,19 @@ import {
 	getUserChannels,
 } from "../../service/channelsService";
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AuthenticatedRequest } from "../../interfaces/passportInterfaces";
-const { isAuthenticated } = require("../../helpers/utils.js");
-const { handleError } = require("../../helpers/errorHelpers");
+import { isAuthenticated } from "../../helpers/utils";
+import { handleError } from "../../helpers/errorHelpers";
 
 router.get(
 	"",
 	isAuthenticated,
 	async (req: AuthenticatedRequest, res: Response) => {
-		const page = parseInt(req.query.page as string) || 1;
+		let page = parseInt(req.query.page as string) || 1;
 		const nameFilter = req.query.nameFilter as string;
+
+		if (nameFilter) page = 1;
 
 		try {
 			const paginationData = await getAvailableChannels(
@@ -66,4 +68,4 @@ router.get(
 // 	}
 // });
 
-module.exports = router;
+export default router;

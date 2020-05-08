@@ -1,7 +1,7 @@
 import { Response } from "express";
 
 export class ErrorHandler extends Error {
-	constructor(public statusCode: number) {
+	constructor(public statusCode: number, public message: string) {
 		super();
 	}
 }

@@ -1,5 +1,5 @@
 import User from "../db/models/userModel";
-const { ErrorHandler } = require("./errorHelpers");
+import { ErrorHandler } from "./errorHelpers";
 
 export async function checkUserExists(userId: number) {
 	const idString = userId.toString();
