@@ -8,6 +8,7 @@ const envConfig = {
 	clientSecret: process.env.CLIENT_SECRET as string,
 	callbackURL: process.env.REDIRECT_URI as string,
 	cookieSecret: process.env.COOKIE_SECRET as string,
+	redirectUri: process.env.REDIRECT_URI as string,
 };
 
 export default envConfig;

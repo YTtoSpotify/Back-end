@@ -14,6 +14,6 @@ const sessionConfig = {
 	}),
 };
 
-// if ((process.env.ENV = "production")) config.cookie.secure = true;
+// if ((process.env.ENV = "production")) sessionConfig.cookie.secure = true;
 
 module.exports = session(sessionConfig);
