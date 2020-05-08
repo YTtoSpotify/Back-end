@@ -53,7 +53,6 @@ router.post(
 	[isAuthenticated, handleSpotifyApiTokens],
 	async (req: AuthenticatedRequest, res: Response) => {
 		try {
-			console.log("hit route");
 			await createSpotifyPlaylist(req.user.spotifyId, req.user._id);
 
 			return res.status(200).json({ message: "Spotify playlist created!" });
@@ -67,7 +66,6 @@ router.delete(
 	"/deleteChannel/:channelId",
 	isAuthenticated,
 	async (req: AuthenticatedRequest, res: Response) => {
-		console.log("testing delete channel");
 		try {
 			const userId = req.user._id;
 			const channelId = req.params.channelId;
