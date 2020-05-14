@@ -1,12 +1,8 @@
 import { AuthenticatedRequest } from "./../../interfaces/passportInterfaces";
-import { Response } from "express";
+import { Response, NextFunction } from "express";
 const router = require("express").Router();
 
-import {
-	isAuthenticated,
-	handleSpotifyApiTokens,
-	isTokenExpired,
-} from "../../helpers/utils";
+import { isAuthenticated, handleSpotifyApiTokens } from "../../helpers/utils";
 import { handleError } from "../../helpers/errorHelpers";
 import {
 	getUser,
@@ -34,7 +30,7 @@ router.get(
 router.put(
 	"/addChannel/:channelId",
 	[isAuthenticated],
-	async (req: AuthenticatedRequest, res: Response) => {
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
 		try {
 			const userId = req.user._id;
 			const channelId = req.params.channelId;
@@ -43,7 +39,7 @@ router.put(
 
 			return res.status(200).json({ message: "Channel added!" });
 		} catch (err) {
-			return handleError(err, res);
+			return next(err);
 		}
 	}
 );
@@ -51,13 +47,13 @@ router.put(
 router.post(
 	"/createSpotifyPlaylist",
 	[isAuthenticated, handleSpotifyApiTokens],
-	async (req: AuthenticatedRequest, res: Response) => {
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
 		try {
 			await createSpotifyPlaylist(req.user.spotifyId, req.user._id);
 
 			return res.status(200).json({ message: "Spotify playlist created!" });
 		} catch (err) {
-			return handleError(err, res);
+			return next(err);
 		}
 	}
 );
@@ -65,7 +61,7 @@ router.post(
 router.delete(
 	"/deleteChannel/:channelId",
 	isAuthenticated,
-	async (req: AuthenticatedRequest, res: Response) => {
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
 		try {
 			const userId = req.user._id;
 			const channelId = req.params.channelId;
@@ -74,7 +70,7 @@ router.delete(
 
 			return res.status(204).end();
 		} catch (err) {
-			return handleError(err, res);
+			return next(err);
 		}
 	}
 );

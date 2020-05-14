@@ -21,5 +21,5 @@ export const handleError = (err: ErrorHandler, res: Response) => {
 		message,
 	});
 
-	throw err;
+	console.log(err);
 };
