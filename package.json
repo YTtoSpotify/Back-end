@@ -2,10 +2,14 @@
 	"name": "backend",
 	"version": "1.0.0",
 	"description": "Backend for YT to Spotify project",
-	"main": "BE/src/server.js",
+	"main": "dist/server.js",
 	"scripts": {
 		"test": "test",
-		"server": "nodemon BE/src/server.js"
+		"dev:start": "nodemon dist/server.js",
+		"tsc": "tsc",
+		"dev:build": "tsc --watch --preserveWatchOutput",
+		"dev": "concurrently 'npm:dev:build' 'npm:dev:start'",
+		"postinstall": "npm run tsc"
 	},
 	"repository": {
 		"type": "git",
@@ -14,6 +18,8 @@
 	"author": "Jeffrey M. Lapp",
 	"license": "MIT",
 	"dependencies": {
+		"@types/express-xml-bodyparser": "^0.3.1",
+		"@types/spotify-web-api-node": "^4.0.1",
 		"axios": "^0.19.2",
 		"connect-mongo": "^3.2.0",
 		"cors": "^2.8.5",
@@ -23,10 +29,21 @@
 		"express-xml-bodyparser": "^0.3.0",
 		"mongoose": "^5.9.3",
 		"node-cache": "^5.1.0",
-		"nodemon": "^2.0.2",
 		"passport": "^0.4.1",
 		"passport-spotify": "^1.1.0",
 		"spotify-web-api-node": "^4.0.0",
+		"ts-node": "^8.10.1",
+		"typescript": "^3.8.3",
 		"xml-js": "^1.6.11"
+	},
+	"devDependencies": {
+		"@types/cors": "^2.8.6",
+		"@types/express": "^4.17.6",
+		"@types/express-session": "^1.17.0",
+		"@types/mongodb": "^3.5.16",
+		"@types/mongoose": "^5.7.15",
+		"@types/node": "^13.13.5",
+		"concurrently": "^5.2.0",
+		"nodemon": "^2.0.3"
 	}
 }
