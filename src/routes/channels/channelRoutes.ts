@@ -4,15 +4,14 @@ import {
 	getUserChannels,
 } from "../../service/channelsService";
 
-import { Response } from "express";
+import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../../interfaces/passportInterfaces";
 import { isAuthenticated } from "../../helpers/utils";
-import { handleError } from "../../helpers/errorHelpers";
 
 router.get(
 	"",
 	isAuthenticated,
-	async (req: AuthenticatedRequest, res: Response) => {
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
 		let page = parseInt(req.query.page as string) || 1;
 		const nameFilter = req.query.nameFilter as string;
 
@@ -28,7 +27,7 @@ router.get(
 				...paginationData,
 			});
 		} catch (err) {
-			return handleError(err, res);
+			return next(err);
 		}
 	}
 );
@@ -36,7 +35,7 @@ router.get(
 router.get(
 	"/userChannels",
 	isAuthenticated,
-	async (req: AuthenticatedRequest, res: Response) => {
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
 		const page = parseInt(req.query.page as string) || 1;
 		const nameFilter = req.query.nameFilter as string;
 
@@ -51,7 +50,7 @@ router.get(
 				...paginationData,
 			});
 		} catch (err) {
-			return handleError(err, res);
+			return next(err);
 		}
 	}
 );

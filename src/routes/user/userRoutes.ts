@@ -3,7 +3,6 @@ import { Response, NextFunction } from "express";
 const router = require("express").Router();
 
 import { isAuthenticated, handleSpotifyApiTokens } from "../../helpers/utils";
-import { handleError } from "../../helpers/errorHelpers";
 import {
 	getUser,
 	addChannelToUser,
@@ -14,7 +13,7 @@ import {
 router.get(
 	"",
 	isAuthenticated,
-	async (req: AuthenticatedRequest, res: Response) => {
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
 		try {
 			const userId = req.user._id;
 
@@ -22,7 +21,7 @@ router.get(
 
 			return res.status(200).json(user);
 		} catch (err) {
-			return handleError(err, res);
+			return next(err);
 		}
 	}
 );
