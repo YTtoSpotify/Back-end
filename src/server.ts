@@ -33,12 +33,17 @@ app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
 //GLOBAL MIDDLEWARE
+
+// Error handling for routes
 app.use(
 	(err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
 		handleError(err, res);
 	}
 );
 
+process.on("unhandledRejection", (err) => {
+	console.log(err);
+});
 const port = config.port || 5000;
 
 // run scraper at 10 PM, every day

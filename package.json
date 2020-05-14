@@ -8,7 +8,7 @@
 		"dev:start": "nodemon dist/server.js",
 		"tsc": "tsc",
 		"dev:build": "tsc --watch --preserveWatchOutput",
-		"dev": "concurrently 'npm:build' 'npm:start'",
+		"dev": "concurrently 'npm:dev:build' 'npm:dev:start'",
 		"postinstall": "npm run tsc"
 	},
 	"repository": {

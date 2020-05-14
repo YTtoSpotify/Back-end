@@ -20,7 +20,7 @@ export function isAuthenticated(
 ) {
 	if (req.isAuthenticated()) next();
 	else {
-		throw new ErrorHandler(403, "User not logged in");
+		next(new ErrorHandler(403, "User not logged in"));
 	}
 }
 
@@ -30,10 +30,8 @@ export async function handleSpotifyApiTokens(
 	next: NextFunction
 ) {
 	try {
-		// TODO check token flow, something is getting out of sync with this and refreshSessionAccessToken
 		const { accessToken, refreshToken, tokenExpirationDate } = req.user;
 
-		console.log(new Date(tokenExpirationDate).toLocaleTimeString());
 		if (!spotifyApi.getAccessToken()) spotifyApi.setAccessToken(accessToken);
 
 		if (!spotifyApi.getRefreshToken())
@@ -53,8 +51,7 @@ export async function handleSpotifyApiTokens(
 		}
 		next();
 	} catch (err) {
-		console.log(err);
-		throw err;
+		next(err);
 	}
 }
 
@@ -97,7 +94,7 @@ export async function refreshSessionAccessToken(
 			.collection("sessions")
 			.updateOne({ _id: sessionId }, { $set: { session: sessionString } });
 	} catch (err) {
-		throw err;
+		console.log("refreshSessionAccessToken", err);
 	}
 }
 
@@ -129,7 +126,9 @@ export async function fetchActiveSessions() {
 
 		return activeSessionsDict;
 	} catch (err) {
-		throw err;
+		console.log("fetchActiveSessions", err);
+
+		return null;
 	}
 }
 
@@ -183,21 +182,6 @@ export function getLatestVideoFromXMLFeed(
 		videoTitle: videoTitle as string,
 		videoId: videoId as string,
 	};
-}
-
-export function isSongInSpotifyPlaylist(
-	playlistTrackUriArray: string[],
-	newTrackUri: string
-) {
-	// make set of track uids for O(1) checks
-	const trackIdSet = new Set(playlistTrackUriArray);
-
-	// return boolean indicating if track is already in playlist
-	if (trackIdSet.has(newTrackUri)) {
-		return true;
-	} else {
-		return false;
-	}
 }
 
 export function isSongInUserRecents(
@@ -256,52 +240,46 @@ export async function addSongToUserPlaylist(
 			return trackObject.track.uri;
 		});
 
-		// validate that song is not in playlist already and song is not the previous latest upload
-		// playlist check ensures if channels upload same song it is not added to the playlist twice
+		// validate that song has not been added to user playlist recently
+
 		if (
-			!isSongInSpotifyPlaylist(songUris, songUri) &&
 			!isSongInUserRecents(user.recentlySavedSongUris, songUri) &&
 			songUri
 		) {
 			// add song to playlist
-
 			await spotifyApi.addTracksToPlaylist(user.spotifyPlaylistId, [
 				songUri,
 			]);
-			addSongUriToRecents(songUri, user);
+			await addSongUriToRecents(songUri, user);
 		}
 	} catch (err) {
-		throw err;
+		console.log("addSongToUserPlaylist", err);
 	}
 }
 
 export async function getLatestUploads(
 	channels: IChannelSchema[]
 ): Promise<{ videoTitle: string; videoId: string; channelId: string }[]> {
-	try {
-		// get xml data for each channel's latest video
-		const latestVideosData = await Promise.all(
-			await channels.map(async (channel) => {
-				// get feed xml from youtube channel xml feed
-				const page = await axios.get(
-					`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.ytId}`
-				);
+	// get xml data for each channel's latest video
+	const latestVideosData = await Promise.all(
+		await channels.map(async (channel) => {
+			// get feed xml from youtube channel xml feed
+			const page = await axios.get(
+				`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.ytId}`
+			);
 
-				// get title and id of most recent upload
-				const { videoTitle, videoId } = getLatestVideoFromXMLFeed(page);
+			// get title and id of most recent upload
+			const { videoTitle, videoId } = getLatestVideoFromXMLFeed(page);
 
-				return {
-					videoTitle,
-					videoId,
-					channelId: channel._id,
-				};
-			})
-		);
+			return {
+				videoTitle,
+				videoId,
+				channelId: channel._id,
+			};
+		})
+	);
 
-		return latestVideosData;
-	} catch (err) {
-		throw err;
-	}
+	return latestVideosData;
 }
 
 async function addSongUriToRecents(songUri: string, user: IUserSchema) {
@@ -314,6 +292,43 @@ async function addSongUriToRecents(songUri: string, user: IUserSchema) {
 
 		user.save();
 	} catch (err) {
-		throw err;
+		console.log("addSongUriToRecents", err);
 	}
+}
+
+export async function clearUserPlaylist(user: IUserSchema) {
+	try {
+		// unfollow/delete playlist
+		const unfollowResult = await spotifyApi.unfollowPlaylist(
+			user.spotifyPlaylistId
+		);
+
+		const newPlaylistId = await createUserPlaylist(user.spotifyId);
+
+		user.spotifyPlaylistId = newPlaylistId;
+
+		await user.save();
+	} catch (err) {
+		console.log("clearUserPlaylist", err);
+	}
+}
+
+export async function createUserPlaylist(
+	userSpotifyId: string
+): Promise<string> {
+	const today = new Date();
+	const tomorrow = new Date(today);
+	tomorrow.setDate(today.getDate() + 1);
+
+	const newPlaylistData = await spotifyApi.createPlaylist(
+		userSpotifyId,
+		`Daily Drop: ${tomorrow.toLocaleDateString()}`,
+		{
+			public: false,
+			description:
+				"Playlist generated by YT-To-Spotify - discover your favorite new songs, the easy way.",
+		}
+	);
+
+	return newPlaylistData.body.id;
 }
