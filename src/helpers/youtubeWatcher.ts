@@ -51,7 +51,7 @@ export default async function scrapeChannels() {
 				if (userSession) {
 					spotifyApi.setRefreshToken(userSession.refreshToken);
 					// check if token is expired
-					if (!isTokenExpired(userSession.tokenExpirationDate)) {
+					if (isTokenExpired(userSession.tokenExpirationDate)) {
 						// get new access token and expiration timestamp
 
 						const {
@@ -85,5 +85,6 @@ export default async function scrapeChannels() {
 				}
 			}
 		}
+		console.log("ran scrape");
 	} catch (err) {}
 }
