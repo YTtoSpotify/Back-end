@@ -35,7 +35,7 @@ app.use("/api/user", userRouter);
 app.get("/api/scrape", (req: Request, res: Response, next: NextFunction) => {
 	const host = req.headers["user-agent"];
 	const ip = req.ip;
-	console.log(host);
+	console.log(host, ip);
 	return res.status(200).json({ message: "Success" });
 });
 
