@@ -2,6 +2,7 @@ const router = require("express").Router();
 import {
 	getAvailableChannels,
 	getUserChannels,
+	createChannel,
 } from "../../service/channelsService";
 
 import { Response, NextFunction } from "express";
@@ -49,6 +50,28 @@ router.get(
 			return res.status(200).json({
 				...paginationData,
 			});
+		} catch (err) {
+			return next(err);
+		}
+	}
+);
+
+router.post(
+	"/createChannel",
+	isAuthenticated,
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+		const channelUrl = req.body.channelUrl;
+
+		try {
+			await createChannel(channelUrl);
+
+			const paginationData = await getAvailableChannels(
+				1,
+				"",
+				req.user.subbedChannels
+			);
+
+			return res.status(200).json(paginationData);
 		} catch (err) {
 			return next(err);
 		}

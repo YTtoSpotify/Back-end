@@ -53,8 +53,8 @@ let millisTill10 =
 		now.getFullYear(),
 		now.getMonth(),
 		now.getDate(),
-		22,
-		0,
+		13,
+		40,
 		0,
 		0
 	).getTime() - now.getTime();
@@ -67,7 +67,7 @@ setInterval(() => {
 	try {
 		scrapeChannels();
 	} catch (err) {
-		throw err;
+		console.log(err);
 	}
 }, millisTill10);
 

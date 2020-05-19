@@ -332,3 +332,26 @@ export async function createUserPlaylist(
 
 	return newPlaylistData.body.id;
 }
+
+export function isValidYTUrl(url: string): boolean {
+	const urlRe = new RegExp(
+		"((http|https)://|)(www.|)youtube.com/(channel/|user/)[a-zA-Z0-9-]{1,}",
+		"gi"
+	);
+	const isValid = urlRe.test(url);
+	return isValid ? true : false;
+}
+
+export function getIdOrUsernameFromUrl(
+	url: string
+): { type: "username" | "id"; value: string } {
+	const splitUrl = url.split("/");
+
+	const searchValue = splitUrl[splitUrl.length - 1];
+
+	if (url.includes("user")) {
+		return { type: "username", value: searchValue };
+	} else {
+		return { type: "id", value: searchValue };
+	}
+}
