@@ -57,6 +57,25 @@ router.get(
 		}
 	}
 );
+router.get(
+	"/scrape",
+	async (req: Request, res: Response, next: NextFunction) => {
+		//@ts-ignore
+		const host = req.headers["user-agent"];
+
+		try {
+			// deny request if not from authorized origin
+			if (!host?.includes(config.authorizedRequestHost)) {
+				throw new ErrorHandler(401, "Unauthorized request origin");
+			}
+			// scrape channels for new songs
+			await scrapeChannels();
+			return res.status(200).json({ message: "Ran channel scrape" });
+		} catch (err) {
+			return next(err);
+		}
+	}
+);
 
 router.post(
 	"/createChannel",
@@ -80,25 +99,6 @@ router.post(
 	}
 );
 
-router.get(
-	"/scrape",
-	async (req: Request, res: Response, next: NextFunction) => {
-		//@ts-ignore
-		const host = req.headers["user-agent"];
-
-		try {
-			// deny request if not from authorized origin
-			if (!host?.includes(config.authorizedRequestHost)) {
-				throw new ErrorHandler(401, "Unauthorized request origin");
-			}
-			// scrape channels for new songs
-			await scrapeChannels();
-			return res.status(200).json({ message: "Ran channel scrape" });
-		} catch (err) {
-			return next(err);
-		}
-	}
-);
 // Either add a guard to this or remove it and just add items manually in DB
 // router.delete("/delete/:channelId", async (req, res) => {
 // 	try {
