@@ -11,6 +11,7 @@ const envConfig = {
 	redirectUri: process.env.REDIRECT_URI as string,
 	clientUrl: process.env.CLIENT_URL as string,
 	youtubeAppKey: process.env.YT_APP_KEY as string,
+	authorizedRequestHost: process.env.AUTHORIZED_HOST_STRING as string,
 };
 
 export default envConfig;

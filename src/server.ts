@@ -32,12 +32,23 @@ app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
-app.get("/api/scrape", (req: Request, res: Response, next: NextFunction) => {
-	const host = req.headers["user-agent"];
-	const ip = req.ip;
-	console.log(host, ip);
-	return res.status(200).json({ message: "Success" });
-});
+app.get(
+	"/api/scrape",
+	async (req: Request, res: Response, next: NextFunction) => {
+		const host = req.headers["user-agent"];
+
+		if (!host?.includes(config.authorizedRequestHost)) {
+			throw new ErrorHandler(401, "Unauthorized request origin");
+		}
+
+		try {
+			await scrapeChannels();
+			return res.status(200).json({ message: "Ran channel scrape" });
+		} catch (err) {
+			return console.log(err);
+		}
+	}
+);
 
 //GLOBAL MIDDLEWARE
 
@@ -52,31 +63,6 @@ process.on("unhandledRejection", (err) => {
 	console.log(err);
 });
 const port = config.port || 5000;
-
-// run scraper at 10 PM, every day
-const now = new Date();
-let millisTill10 =
-	new Date(
-		now.getFullYear(),
-		now.getMonth(),
-		now.getDate(),
-		22,
-		0,
-		0,
-		0
-	).getTime() - now.getTime();
-if (millisTill10 < 0) {
-	// it's after 10pm, try 10pm tomorrow.
-	millisTill10 += 86400000;
-}
-
-setInterval(() => {
-	try {
-		scrapeChannels();
-	} catch (err) {
-		console.log(err);
-	}
-}, millisTill10);
 
 app.get("/", (req, res) => {
 	res.status(200).json({ message: `Server running on port ${port}` });
