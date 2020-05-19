@@ -32,23 +32,6 @@ app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
-app.get(
-	"/api/scrape",
-	async (req: Request, res: Response, next: NextFunction) => {
-		const host = req.headers["user-agent"];
-
-		if (!host?.includes(config.authorizedRequestHost)) {
-			throw new ErrorHandler(401, "Unauthorized request origin");
-		}
-
-		try {
-			await scrapeChannels();
-			return res.status(200).json({ message: "Ran channel scrape" });
-		} catch (err) {
-			return console.log(err);
-		}
-	}
-);
 
 //GLOBAL MIDDLEWARE
 
