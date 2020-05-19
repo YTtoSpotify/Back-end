@@ -54,7 +54,7 @@ let millisTill10 =
 		now.getMonth(),
 		now.getDate(),
 		13,
-		40,
+		42,
 		0,
 		0
 	).getTime() - now.getTime();
