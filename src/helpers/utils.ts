@@ -137,6 +137,8 @@ export function cleanVideoTitle(videoTitle: string): string {
 	const stringsToRemove = new Set([
 		"\\(",
 		"\\)",
+		"[",
+		"]",
 		"&",
 		"ft.",
 		"feat.",
@@ -145,6 +147,7 @@ export function cleanVideoTitle(videoTitle: string): string {
 		"lyrics",
 		"stripped down version",
 		"official music video",
+		"official video",
 	]);
 
 	let regexReplaceString = "";
@@ -345,13 +348,15 @@ export function isValidYTUrl(url: string): boolean {
 export function getIdOrUsernameFromUrl(
 	url: string
 ): { type: "username" | "id"; value: string } {
-	const splitUrl = url.split("/");
-
-	const searchValue = splitUrl[splitUrl.length - 1];
-
 	if (url.includes("user")) {
-		return { type: "username", value: searchValue };
+		const usernameString = url
+			.replace("https://www.youtube.com/user/", "")
+			.split("/")[0];
+		return { type: "username", value: usernameString };
 	} else {
-		return { type: "id", value: searchValue };
+		const idString = url
+			.replace("https://www.youtube.com/channel/", "")
+			.split("/")[0];
+		return { type: "id", value: idString };
 	}
 }

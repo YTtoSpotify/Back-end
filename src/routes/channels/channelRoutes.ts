@@ -11,6 +11,7 @@ import { isAuthenticated } from "../../helpers/utils";
 import { ErrorHandler } from "../../helpers/errorHelpers";
 import scrapeChannels from "../../helpers/youtubeWatcher";
 import config from "../../config";
+import { addChannelToUser } from "../../service/usersService";
 router.get(
 	"",
 	isAuthenticated,
@@ -84,8 +85,9 @@ router.post(
 		const channelUrl = req.body.channelUrl;
 
 		try {
-			await createChannel(channelUrl);
+			const channelData = await createChannel(channelUrl);
 
+			await addChannelToUser(channelData!.id, req.user._id);
 			const paginationData = await getAvailableChannels(
 				1,
 				"",

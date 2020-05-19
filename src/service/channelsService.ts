@@ -1,4 +1,4 @@
-import { NewChannel } from "./../interfaces/dbModelInterfaces";
+import { NewChannel, IChannelSchema } from "./../interfaces/dbModelInterfaces";
 import { default as axios } from "axios";
 import { ErrorHandler } from "./../helpers/errorHelpers";
 import Channel from "../db/models/channelModel";
@@ -8,20 +8,25 @@ import {
 } from "../helpers/channelsServiceHelpers";
 import { isValidYTUrl, getIdOrUsernameFromUrl } from "../helpers/utils";
 import config from "../config";
+import { addChannelToUser } from "./usersService";
 
 interface YTChannelResponse {
-	items?: {
-		id: string;
-		snippet: {
-			title: string;
-			thumbnails: {
-				default: {
-					url: string;
+	data: {
+		items?: {
+			id: string;
+			snippet: {
+				title: string;
+				thumbnails: {
+					default: {
+						url: string;
+					};
 				};
 			};
-		};
-		topicCategories: string[];
-	}[];
+			topicDetails: {
+				topicCategories: string[];
+			};
+		}[];
+	};
 }
 
 export async function getAvailableChannels(
@@ -81,32 +86,39 @@ export async function deleteChannel(channelId: string) {
 	return channel;
 }
 
-export async function createChannel(channelUrl: string) {
+export async function createChannel(
+	channelUrl: string
+): Promise<IChannelSchema | undefined> {
 	// check if url is valid
-	if (!isValidYTUrl(channelUrl))
-		throw new ErrorHandler(400, "Invalid channel URL");
+	try {
+		if (!isValidYTUrl(channelUrl))
+			throw new ErrorHandler(400, "Invalid channel URL");
 
-	// extract id or username from url
-	const searchTerm = getIdOrUsernameFromUrl(channelUrl);
-	const searchQuery =
-		searchTerm.type === "username"
-			? `forUsername=${searchTerm.value}`
-			: `id=${searchTerm.value}`;
-	// fetch channel
-	const channelData: YTChannelResponse = await axios.get(
-		`https://www.googleapis.com/youtube/v3/channels?${searchQuery}&part=snippet&key=${config.youtubeAppKey}`
-	);
-	// check if channel exists
-	if (!channelData.items)
-		throw new ErrorHandler(404, "Channel does not exist");
-	if (channelData.items) {
-		// check if channel is a music channel
-		const isMusicChannel = channelData.items[0].topicCategories.includes(
-			"https://en.wikipedia.org/wiki/Music"
+		// extract id or username from url
+		const searchTerm = getIdOrUsernameFromUrl(channelUrl);
+		// youtube channel query - search based on channel username or id
+		const searchQuery =
+			searchTerm.type === "username"
+				? `forUsername=${searchTerm.value}`
+				: `id=${searchTerm.value}`;
+		// fetch channel
+		const { data: channelData }: YTChannelResponse = await axios.get(
+			`https://www.googleapis.com/youtube/v3/channels?${searchQuery}&part=snippet,topicDetails&key=${config.youtubeAppKey}`
 		);
-		if (!isMusicChannel) {
-			throw new ErrorHandler(400, "Channel is not a music channel");
-		} else {
+
+		// check if channel exists
+		if (!channelData.items)
+			throw new ErrorHandler(404, "Channel does not exist");
+		if (channelData.items) {
+			// check if channel is a music channel
+			const isMusicChannel = channelData.items[0].topicDetails.topicCategories.includes(
+				"https://en.wikipedia.org/wiki/Music"
+			);
+
+			if (!isMusicChannel) {
+				throw new ErrorHandler(400, "Channel is not a music channel");
+			}
+
 			const { snippet, id: ytId } = channelData.items[0];
 			const newChannel: NewChannel = {
 				name: snippet.title,
@@ -114,8 +126,11 @@ export async function createChannel(channelUrl: string) {
 				url: channelUrl,
 				ytId,
 			};
-			await new Channel(newChannel).save();
+			const newChannelData = await new Channel(newChannel).save();
+			return newChannelData;
 		}
+	} catch (err) {
+		console.log(err);
 	}
 }
 
