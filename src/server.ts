@@ -32,6 +32,12 @@ app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
+app.get("/api/scrape", (req: Request, res: Response, next: NextFunction) => {
+	const host = req.hostname;
+	console.log(host);
+	return res.status(200).json({ message: "Success" });
+});
+
 //GLOBAL MIDDLEWARE
 
 // Error handling for routes
@@ -53,8 +59,8 @@ let millisTill10 =
 		now.getFullYear(),
 		now.getMonth(),
 		now.getDate(),
-		13,
-		42,
+		22,
+		0,
 		0,
 		0
 	).getTime() - now.getTime();
