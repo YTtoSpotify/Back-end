@@ -32,6 +32,7 @@ app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
 app.use("/api/auth", authRouter);
 app.use("/api/channels", channelRouter);
 app.use("/api/user", userRouter);
+
 //GLOBAL MIDDLEWARE
 
 // Error handling for routes
@@ -45,31 +46,6 @@ process.on("unhandledRejection", (err) => {
 	console.log(err);
 });
 const port = config.port || 5000;
-
-// run scraper at 10 PM, every day
-const now = new Date();
-let millisTill10 =
-	new Date(
-		now.getFullYear(),
-		now.getMonth(),
-		now.getDate(),
-		22,
-		0,
-		0,
-		0
-	).getTime() - now.getTime();
-if (millisTill10 < 0) {
-	// it's after 10pm, try 10pm tomorrow.
-	millisTill10 += 86400000;
-}
-
-setInterval(() => {
-	try {
-		scrapeChannels();
-	} catch (err) {
-		throw err;
-	}
-}, millisTill10);
 
 app.get("/", (req, res) => {
 	res.status(200).json({ message: `Server running on port ${port}` });

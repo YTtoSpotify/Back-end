@@ -28,4 +28,9 @@ export interface IChannelSchema extends Document {
 
 export interface IChannelModel extends Model<IChannelSchema> {}
 
-export interface NewChannel {}
+export interface NewChannel {
+	name: string;
+	img: string;
+	url: string;
+	ytId: string;
+}

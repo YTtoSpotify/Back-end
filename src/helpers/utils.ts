@@ -137,6 +137,8 @@ export function cleanVideoTitle(videoTitle: string): string {
 	const stringsToRemove = new Set([
 		"\\(",
 		"\\)",
+		"[",
+		"]",
 		"&",
 		"ft.",
 		"feat.",
@@ -145,6 +147,7 @@ export function cleanVideoTitle(videoTitle: string): string {
 		"lyrics",
 		"stripped down version",
 		"official music video",
+		"official video",
 	]);
 
 	let regexReplaceString = "";
@@ -331,4 +334,29 @@ export async function createUserPlaylist(
 	);
 
 	return newPlaylistData.body.id;
+}
+
+export function isValidYTUrl(url: string): boolean {
+	const urlRe = new RegExp(
+		"((http|https)://|)(www.|)youtube.com/(channel/|user/)[a-zA-Z0-9-]{1,}",
+		"gi"
+	);
+	const isValid = urlRe.test(url);
+	return isValid ? true : false;
+}
+
+export function getIdOrUsernameFromUrl(
+	url: string
+): { type: "username" | "id"; value: string } {
+	if (url.includes("user")) {
+		const usernameString = url
+			.replace("https://www.youtube.com/user/", "")
+			.split("/")[0];
+		return { type: "username", value: usernameString };
+	} else {
+		const idString = url
+			.replace("https://www.youtube.com/channel/", "")
+			.split("/")[0];
+		return { type: "id", value: idString };
+	}
 }
