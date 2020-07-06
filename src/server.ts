@@ -25,11 +25,12 @@ app.use(passport.session());
 app.use(express.json());
 app.use(xmlParser());
 
-let corsOptions = {
-	credentials: true,
-	origin: ["http://localhost:4200", "https://yttospotify.netlify.app/"],
-};
-app.use(cors(corsOptions));
+app.use(
+	cors({
+		credentials: true,
+		origin: ["http://localhost:4200", "https://yttospotify.netlify.app"],
+	})
+);
 
 // ROUTES
 app.use("/api/auth", authRouter);
