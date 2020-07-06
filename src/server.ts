@@ -9,7 +9,6 @@ import userRouter from "./routes/user/userRoutes";
 import { handleError, ErrorHandler } from "./helpers/errorHelpers";
 import xmlParser from "express-xml-bodyparser";
 import sessionInstance from "./helpers/sessionCreate";
-import scrapeChannels from "./helpers/youtubeWatcher";
 import passport from "./helpers/passport/passportConfig";
 const app = express();
 
@@ -26,7 +25,12 @@ app.use(passport.session());
 app.use(express.json());
 app.use(xmlParser());
 
-app.use(cors({ credentials: true, origin: "http://localhost:4200" }));
+app.use(
+	cors({
+		credentials: true,
+		origin: ["http://localhost:4200", "https://yttospotify.netlify.app"],
+	})
+);
 
 // ROUTES
 app.use("/api/auth", authRouter);
