@@ -32,7 +32,7 @@ router.get(
 router.get(
 	"/callback",
 	passport.authenticate("spotify", {
-		failureRedirect: `${config.clientUrl}/login`,
+		failureRedirect: config.clientUrl,
 		successRedirect: `${config.clientUrl}/authenticate`,
 	}),
 	(req: Request, res: Response) => {}
@@ -44,7 +44,7 @@ router.get("/profile", (req: AuthenticatedRequest, res: Response) => {
 
 router.get("/logout", (req: AuthenticatedRequest, res: Response) => {
 	req.logout();
-	res.redirect(`${config.clientUrl}/login`);
+	return res.status(200).end();
 });
 
 export default router;
