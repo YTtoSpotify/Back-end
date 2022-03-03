@@ -8,7 +8,6 @@ import {
 } from "../helpers/channelsServiceHelpers";
 import { isValidYTUrl, getIdOrUsernameFromUrl } from "../helpers/utils";
 import config from "../config";
-import { addChannelToUser } from "./usersService";
 
 interface YTChannelResponse {
 	data: {
@@ -111,9 +110,10 @@ export async function createChannel(
 			throw new ErrorHandler(404, "Channel does not exist");
 		if (channelData.items) {
 			// check if channel is a music channel
-			const isMusicChannel = channelData.items[0].topicDetails.topicCategories.includes(
-				"https://en.wikipedia.org/wiki/Music"
-			);
+			const isMusicChannel =
+				channelData.items[0].topicDetails.topicCategories.includes(
+					"https://en.wikipedia.org/wiki/Music"
+				);
 
 			if (!isMusicChannel) {
 				throw new ErrorHandler(400, "Channel is not a music channel");

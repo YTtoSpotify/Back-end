@@ -106,7 +106,8 @@ export async function fetchActiveSessions() {
 			.find({});
 
 		// convert to array
-		const activeSessionsArray = (await activeSessionDocsCursor.toArray()) as IDbSession[];
+		const activeSessionsArray =
+			(await activeSessionDocsCursor.toArray()) as IDbSession[];
 		const activeSessionsDict: {
 			[key: string]: {
 				sessionId: string;
@@ -163,9 +164,10 @@ export function cleanVideoTitle(videoTitle: string): string {
 	return cleanedTitleString;
 }
 
-export function getLatestVideoFromXMLFeed(
-	channelXMLFeed: AxiosResponse
-): { videoTitle: string; videoId: string } {
+export function getLatestVideoFromXMLFeed(channelXMLFeed: AxiosResponse): {
+	videoTitle: string;
+	videoId: string;
+} {
 	// convert xml to js object
 	const allXMLElements: convert.Element[] = convert.xml2js(channelXMLFeed.data)
 		.elements[0].elements;
@@ -345,9 +347,10 @@ export function isValidYTUrl(url: string): boolean {
 	return isValid ? true : false;
 }
 
-export function getIdOrUsernameFromUrl(
-	url: string
-): { type: "username" | "id"; value: string } {
+export function getIdOrUsernameFromUrl(url: string): {
+	type: "username" | "id";
+	value: string;
+} {
 	if (url.includes("user")) {
 		const usernameString = url
 			.replace("https://www.youtube.com/user/", "")

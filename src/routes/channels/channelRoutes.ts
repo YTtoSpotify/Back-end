@@ -58,6 +58,7 @@ router.get(
 		}
 	}
 );
+
 router.get(
 	"/scrape",
 	async (req: Request, res: Response, next: NextFunction) => {
